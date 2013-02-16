@@ -133,13 +133,13 @@ class XXX_CommandLine_Client_Input
 	{
 		$result = false;
 		
-		$lines = array();
+		$data = '';
 		
 		while(!feof(STDIN))
 		{
-			$line = fread(STDIN, 4096);
+			$chunk = fread(STDIN, 4096);
 			
-			if ($line === false)
+			if ($chunk === false)
 			{
 				if(feof(STDIN))	
 				{
@@ -149,13 +149,10 @@ class XXX_CommandLine_Client_Input
 				continue;
 			}
 			
-			if ($line != '')
-			{
-				$lines[] = $line;
-			}
+			$data .= $chunk;
 		}
 		
-		$result = XXX_Array::joinValuesToString($lines, XXX_String::$lineSeparator);
+		$result = $data;
 		
 		if ($parser && $result != '')
 		{
