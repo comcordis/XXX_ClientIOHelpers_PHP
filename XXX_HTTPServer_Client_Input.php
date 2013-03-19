@@ -1,6 +1,5 @@
 <?php
 
-
 abstract class XXX_HTTPServer_Client_Input
 {
 	const CLASS_NAME = 'XXX_HTTPServer_Client_Input';
@@ -11,17 +10,13 @@ abstract class XXX_HTTPServer_Client_Input
 		(
 			'acceptFileUpload' => false,
 			
-			'acceptAnonymousFileUpload' => false,
-			
 			'minimumFileSize' => 0,
 			'maximumFileSize' => 0,
 			
 			'maximumFileTotal' => 0,
 			
 			'acceptFileExtensions' => array(),
-			'acceptFileMIMETypes' => array(),
-			
-			'scanLiveWithAntiVirus' => true
+			'acceptFileMIMETypes' => array()
 		)
 	);
 	
@@ -128,9 +123,9 @@ abstract class XXX_HTTPServer_Client_Input
 		
 		if (!self::$withinRequestBodyLimits)
 		{			
-			trigger_error('Not within request body limits.');
+			trigger_error('Not within request body limits.', E_USER_ERROR);
 			
-			//XXX::dispatchEventToListeners('notWithinRequestBodyLimits', array());
+			XXX::dispatchEventToListeners('notWithinRequestBodyLimits', array());
 		}
 		
 		self::$parsedURIVariables = self::parseVariables($_GET);
@@ -291,11 +286,11 @@ abstract class XXX_HTTPServer_Client_Input
 	}
 	
 	
-	public static function getEffectiveHTTPServer_Client_Input_LimitsFilteredFileUploads ($HTTPServer_Client_Input_LimitsProfile = 'default', $accountClientInputLimits = array())
+	public static function getEffectiveHTTPServer_Client_Input_LimitsFilteredFileUploads ($HTTPServer_Client_Input_LimitsProfile = 'default')
 	{
 		$fileUploads = self::getFileUploads();
 		
-		$effectiveHTTPServer_Client_Input_Limits = XXX_HTTPServer_Client_Input::composeEffectiveHTTPServer_Client_Input_Limits($HTTPServer_Client_Input_LimitsProfile, $accountClientInputLimits);
+		$effectiveHTTPServer_Client_Input_Limits = XXX_HTTPServer_Client_Input::composeEffectiveHTTPServer_Client_Input_Limits($HTTPServer_Client_Input_LimitsProfile);
 		
 		$fileUploads = XXX_HTTPServer_Client_Input::filterFileUploadsWithEffectiveHTTPServer_Client_Input_Limits($fileUploads, $effectiveHTTPServer_Client_Input_Limits);
 		
@@ -531,9 +526,7 @@ abstract class XXX_HTTPServer_Client_Input
 						{
 							$newUploadedFile['owner'] = XXX_FileSystem_Local::getFileOwner($uploadedFile['tmp_name']);
 						}
-						
-						$newUploadedFile['scannedWithAntiVirus'] = false;
-						
+												
 						$newUploadedFiles[$inputName][] = $newUploadedFile;
 						
 						$uploadedFileSizeTotal += $newUploadedFile['size'];
@@ -1033,12 +1026,7 @@ abstract class XXX_HTTPServer_Client_Input
 			$fileSizeTotal = 0;
 			$failedFileSizeTotal = 0;
 			$uploadedFileSizeTotal = 0;
-			
-			if ($customHTTPServer_Client_Input_Limits['scanLiveWithAntiVirus'])
-			{
-				//$scanResults = XXX_FileSystem_Local_ClamAV::scanDirectory(XXX_Paths::getPath('AbsoluteLocal', 'httpFileUploads_temporary'));
-			}
-									
+												
 			for ($i = 0, $iEnd = XXX_Array::getFirstLevelItemTotal($fileUploads['files']['uploaded']); $i < $iEnd; ++$i)
 			{
 				$uploadedFile = $fileUploads['files']['uploaded'][$i];
@@ -1087,26 +1075,6 @@ abstract class XXX_HTTPServer_Client_Input
 				
 				if ($valid)
 				{
-					if (!$customHTTPServer_Client_Input_Limits['anonymous'] && XXX_Type::isFilledArray($customHTTPServer_Client_Input_Limits['accountClientInputLimits']) && XXX_Type::isPositiveInteger($customHTTPServer_Client_Input_Limits['accountClientInputLimits']['space']['capacity']) && $customHTTPServer_Client_Input_Limits['accountClientInputLimits']['space']['capacity'] > 0 && !XXX_Client_Input::validateFreeAccountStorageSpace($customHTTPServer_Client_Input_Limits['accountClientInputLimits']['space']['free'], ($uploadedFileSizeTotal + $uploadedFile['size'])))
-					{
-						$uploadedFile['error'] = XXX_I18n_Translation::get('HTTPServer_Client_Input', 'errors', 'exceedsFreeAccountStorageSpace');
-						
-						$valid = false;
-					}
-				}
-				
-				if ($valid)
-				{
-					if ($customHTTPServer_Client_Input_Limits['anonymous'] && !$customHTTPServer_Client_Input_Limits['acceptAnonymousFileUpload'])
-					{
-						$uploadedFile['error'] = XXX_I18n_Translation::get('HTTPServer_Client_Input', 'errors', 'unacceptedAnonymousFileUpload');
-						
-						$valid = false;									
-					}
-				}
-				
-				if ($valid)
-				{
 					if (XXX_Type::isPositiveInteger($customHTTPServer_Client_Input_Limits['maximumFileSizeTotal']) && !XXX_Client_Input::validateMaximumFileSizeTotal($customHTTPServer_Client_Input_Limits['maximumFileSizeTotal'], ($uploadedFileSizeTotal + $uploadedFile['size'])))
 					{
 						$uploadedFile['error'] = XXX_I18n_Translation::get('HTTPServer_Client_Input', 'errors', 'exceedsMaximumFileSizeTotal');
@@ -1134,49 +1102,7 @@ abstract class XXX_HTTPServer_Client_Input
 						$valid = false;
 					}
 				}
-				
-				if ($valid)
-				{
-					if ($customHTTPServer_Client_Input_Limits['scanLiveWithAntiVirus'])
-					{
-						if ($scanResults)
-						{
-							foreach ($scanResults['files'] as $file)
-							{
-								if ($file['absolutePath'] == $uploadedFile['temporaryFile'])
-								{
-									if (!$file['clean'])
-									{										
-										$variables = array('signature' => $file['virusDescription']);
-										
-										$uploadedFile['scannedWithAntiVirus'] = true;
-										$uploadedFile['virusDescription'] = $file['virusDescription'];
-										$uploadedFile['error'] = XXX_I18n_Translation::get('HTTPServer_Client_Input', 'errors', 'contaminatedFile');
-										$uploadedFile['error']['description'] = XXX_I18n_Translation::composeVariableText($uploadedFile['error']['description'], $variables);
-							
-										$valid = false;
-									}
-									else
-									{
-										$uploadedFile['scannedWithAntiVirus'] = true;
-									}
-									
-									break;
-								}
-							}
-						}
-						// Unable to scan...
-						else
-						{
-							$uploadedFile['error'] = XXX_I18n_Translation::get('HTTPServer_Client_Input', 'errors', 'potentialContaminatedFile');
-				
-							XXX::dispatchEventToListeners('unableToScanUploadedFileWithAntiVirus', $uploadedFile);
-							
-							$valid = false;
-						}
-					}
-				}
-				
+								
 				++$fileTotal;
 				$fileSizeTotal += $uploadedFile['size'];
 				
@@ -1357,7 +1283,7 @@ abstract class XXX_HTTPServer_Client_Input
 	
 	
 	
-	public static function composeEffectiveHTTPServer_Client_Input_Limits ($HTTPServer_Client_Input_LimitsProfile = '', $accountClientInputLimits = array())
+	public static function composeEffectiveHTTPServer_Client_Input_Limits ($HTTPServer_Client_Input_LimitsProfile = '')
 	{
 		// See if submitted with form
 		if ($HTTPServer_Client_Input_LimitsProfile == '')
@@ -1370,16 +1296,8 @@ abstract class XXX_HTTPServer_Client_Input
 		{
 			$HTTPServer_Client_Input_LimitsProfile = 'default';
 		}
-		
-		if (XXX_Type::isEmptyArray($accountClientInputLimits))
-		{
-			//$accountClientInputLimits = XXX_Account_ClientInput::getLimits();
-		}
-		
-		$anonymous = true;
-				
+			
 		$acceptFileUpload = false;
-		$acceptAnonymousFileUpload = false;
 		
 		$minimumFileSize = 0;
 		$maximumFileSize = 0;
@@ -1396,7 +1314,6 @@ abstract class XXX_HTTPServer_Client_Input
 		$acceptAnyFileExtension = false;
 		$acceptFileMIMETypes = array();
 		$acceptAnyFileMIMEType = false;
-		$scanLiveWithAntiVirus = true;
 		
 		$profile = $HTTPServer_Client_Input_LimitsProfile;
 		
@@ -1409,8 +1326,6 @@ abstract class XXX_HTTPServer_Client_Input
 			if ($phpHTTPServer_Client_Input_Limits)
 			{
 				$acceptFileUpload = $phpHTTPServer_Client_Input_Limits['acceptFileUpload'];
-				
-				$acceptAnonymousFileUpload = $phpHTTPServer_Client_Input_Limits['acceptAnonymousFileUpload'];
 				
 				$minimumFileSize = $phpHTTPServer_Client_Input_Limits['minimumFileSize'];
 				$maximumFileSize = $phpHTTPServer_Client_Input_Limits['maximumFileSize'];
@@ -1438,12 +1353,7 @@ abstract class XXX_HTTPServer_Client_Input
 				
 				$disabledReason = 'HTTPServer_Client_Input_LimitsProfile';
 			}
-			
-			if (XXX_Type::isBoolean($HTTPServer_Client_Input_LimitsProfile['acceptAnonymousFileUpload']) && $acceptAnonymousFileUpload && !$HTTPServer_Client_Input_LimitsProfile['acceptAnonymousFileUpload'])
-			{
-				$acceptAnonymousFileUpload = $HTTPServer_Client_Input_LimitsProfile['acceptAnonymousFileUpload'];
-			}
-			
+						
 			if (XXX_Type::isPositiveInteger($HTTPServer_Client_Input_LimitsProfile['minimumFileSize']))
 			{
 				$minimumFileSize = $HTTPServer_Client_Input_LimitsProfile['minimumFileSize'];
@@ -1474,48 +1384,6 @@ abstract class XXX_HTTPServer_Client_Input
 				$maximumInputTime = $HTTPServer_Client_Input_LimitsProfile['maximumInputTime'];
 			}
 			
-			if (XXX_Type::isBoolean($HTTPServer_Client_Input_LimitsProfile['scanLiveWithAntiVirus']) && $scanLiveWithAntiVirus && !$HTTPServer_Client_Input_LimitsProfile['scanLiveWithAntiVirus'])
-			{
-				$scanLiveWithAntiVirus = $HTTPServer_Client_Input_LimitsProfile['scanLiveWithAntiVirus'];
-			}
-		
-		// Account client input limits
-		
-			if (XXX_Type::isFilledArray($accountClientInputLimits) && $accountClientInputLimits['user_ID'] > 0)
-			{
-				$anonymous = false;
-				
-				if ($accountClientInputLimits['space']['used'] > $accountClientInputLimits['space']['capacity'])
-				{
-					$accountClientInputLimits['space']['used'] = $accountClientInputLimits['space']['capacity'];
-				}
-				
-				$accountClientInputLimits['space']['free'] = $accountClientInputLimits['space']['capacity'] - $accountClientInputLimits['space']['used'];
-				
-				if ($maximumFileSizeTotal > $accountClientInputLimits['space']['free'])
-				{
-					$maximumFileSizeTotal = $accountClientInputLimits['space']['free'];
-				}
-				
-				if ($maximumFileSize > $accountClientInputLimits['space']['free'])
-				{
-					$maximumFileSize = $accountClientInputLimits['space']['free'];
-				}
-				
-				if ($accountClientInputLimits['space']['free'] <= 0)
-				{
-					$acceptFileUpload = false;
-					
-					$disabledReason = 'noFreeSpaceInAccount';
-				}
-			}
-			else if (!$acceptAnonymousFileUpload)
-			{
-				$acceptFileUpload = false;
-				
-				$disabledReason = 'notAnonymous';
-			}
-		
 		// File extensions
 		
 			if ($acceptFileUpload)
@@ -1738,8 +1606,6 @@ abstract class XXX_HTTPServer_Client_Input
 			
 				$maximumFileSizeTotal = 0;
 				
-				$acceptAnonymousFileUpload = false;
-				
 				$acceptFileExtensions = array();
 				$acceptAnyFileExtension = false;
 				$acceptFileMIMETypes = array();
@@ -1751,11 +1617,8 @@ abstract class XXX_HTTPServer_Client_Input
 			}
 					
 		$limits = array
-		(
-			'anonymous' => $anonymous,
-			
+		(			
 			'acceptFileUpload' => $acceptFileUpload,
-			'acceptAnonymousFileUpload' => $acceptAnonymousFileUpload,
 			
 			'minimumFileSize' => $minimumFileSize,
 			'maximumFileSize' => $maximumFileSize,
@@ -1772,10 +1635,6 @@ abstract class XXX_HTTPServer_Client_Input
 			'acceptAnyFileExtension' => $acceptAnyFileExtension,
 			'acceptFileMIMETypes' => $acceptFileMIMETypes,
 			'acceptAnyFileMIMEType' => $acceptAnyFileMIMEType,
-			
-			'scanLiveWithAntiVirus' => $scanLiveWithAntiVirus,
-			
-			'accountClientInputLimits' => $accountClientInputLimits,
 			
 			'profile' => $profile,
 			
