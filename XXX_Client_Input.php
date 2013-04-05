@@ -28,78 +28,99 @@ abstract class XXX_Client_Input
 		}
 		
 		// Use it only to sanitize client input variables....
-		public static function sanitizeVariable ($variableName = '', $value = '', $sanitation = 'string', $defaultValue = NULL, $parameters = array())
+		public static function sanitizeVariable ($variableName = '', $value = '', $sanitation = 'string', $parameters = array(), $simplifyResult = false)
 		{
 			if (XXX_Type::isArray($value))
 			{
 				$result = array
 				(
-					'sanit' => false,
+					'isSanit' => false,
 					'name' => $variableName,
 					'sanitation' => $sanitation,
-					'original' => $value,
-					'sanitized' => array(),
-					'default' => $defaultValue
+					'originalValue' => $value,
+					'sanitizedValue' => array(),
+					'defaultValue' => $parameters['defaultValue']
 				);
-				
-				$originalAdvanced = $parameters['advanced'];
-				$parameters['advanced'] = true;
 				
 				for ($i = 0, $iEnd = XXX_Array::getFirstLevelItemTotal($value); $i < $iEnd; ++$i)
 				{
 					if ($i == 0)
 					{
-						$result['sanit'] = true;
+						$result['isSanit'] = true;
 					}
 					
-					$temp = self::sanitizeVariable($variableName, $value[$i], $sanitation, $defaultValue, $parameters);
+					$temp = self::sanitizeVariable($variableName, $value[$i], $sanitation, $defaultValue, $parameters, false);
 					
-					if (!$temp['sanit'])
+					if (!$temp['isSanit'])
 					{
-						$result['sanit'] = false;
+						$result['isSanit'] = false;
 					}
 					
-					$result['sanitized'][$i] = $temp['sanitized'];
+					$result['sanitizedValue'][$i] = $temp['sanitizedValue'];
 					
 					if ($i == 0)
 					{					
-						$result['default'] = $temp['default'];
+						$result['defaultValue'] = $temp['defaultValue'];
 					}
 				}
-				
-				$parameters['advanced'] = $originalAdvanced;
 			}
 			else
 			{
 				$result = array
 				(
-					'sanit' => false,
+					'isSanit' => false,
 					'name' => $variableName,
 					'sanitation' => $sanitation,
-					'original' => $value,
-					'sanitized' => '',
-					'default' => $defaultValue
+					'originalValue' => $value,
+					'sanitizedValue' => '',
+					'defaultValue' => $parameters['defaultValue']
 				);
 				
 				switch ($sanitation)
 				{
+					case 'raw':
+						if (XXX_Type::isNull($result['defaultValue']))
+						{
+							$result['defaultValue'] = 0;
+						}
+						$result['sanitizedValue'] = $result['defaultValue'];
+						
+						$result['sanitizedValue'] = $value;
+						
+						$result['isSanit'] = true;
+						break;
+					case 'base64String':
+						$value = XXX_String_Base64::decode($value);
+						
+						$result = self::sanitizeVariable($variableName, $value, 'string', $defaultValue, $parameters, false);												
+						break;
+					case 'base64Integer':
+						$value = XXX_String_Base64::decode($value);
+						
+						$result = self::sanitizeVariable($variableName, $value, 'integer', $defaultValue, $parameters, false);												
+						break;
+					case 'base64PositiveInteger':
+						$value = XXX_String_Base64::decode($value);
+						
+						$result = self::sanitizeVariable($variableName, $value, 'positiveInteger', $defaultValue, $parameters, false);												
+						break;
 					case 'integer':
 						if (XXX_Type::isNull($result['defaultValue']))
 						{
 							$result['defaultValue'] = 0;
 						}
-						$result['sanitized'] = $result['defaultValue'];
+						$result['sanitizedValue'] = $result['defaultValue'];
 						
 						$sanitizedValue = XXX_Type::makeInteger($value);
 						
 						if ($sanitizedValue == $value)
 						{
-							$result['sanitized'] = $sanitizedValue;
+							$result['sanitizedValue'] = $sanitizedValue;
 						}
 						
-						$result['sanit'] = $result['sanitized'] === $result['original'];
+						$result['isSanit'] = $result['sanitizedValue'] === $result['originalValue'];
 						
-						if (!$result['sanit'])
+						if (!$result['isSanit'])
 						{
 							trigger_error('Variable: "' . $variableName . '" is NOT an integer', E_USER_WARNING);
 							
@@ -111,19 +132,19 @@ abstract class XXX_Client_Input
 						{
 							$result['defaultValue'] = 0;
 						}
-						$result['sanitized'] = $result['defaultValue'];
+						$result['sanitizedValue'] = $result['defaultValue'];
 						
 						$sanitizedValue = XXX_Type::makeInteger($value);
 						$sanitizedValue = XXX_Default::toPositiveInteger($sanitizedValue, 0);
 						
 						if ($sanitizedValue == $value)
 						{
-							$result['sanitized'] = $sanitizedValue;
+							$result['sanitizedValue'] = $sanitizedValue;
 						}
 						
-						$result['sanit'] = $result['sanitized'] === $result['original'];
+						$result['isSanit'] = $result['sanitizedValue'] === $result['originalValue'];
 						
-						if (!$result['sanit'])
+						if (!$result['isSanit'])
 						{
 							trigger_error('Variable: "' . $variableName . '" is NOT a positive integer', E_USER_WARNING);
 							
@@ -135,18 +156,18 @@ abstract class XXX_Client_Input
 						{
 							$result['defaultValue'] = 0;
 						}
-						$result['sanitized'] = $result['defaultValue'];
+						$result['sanitizedValue'] = $result['defaultValue'];
 						
 						$sanitizedValue = XXX_Type::makeFloat($value);
 						
 						if ($sanitizedValue == $value)
 						{
-							$result['sanitized'] = $sanitizedValue;
+							$result['sanitizedValue'] = $sanitizedValue;
 						}
 						
-						$result['sanit'] = $result['sanitized'] === $result['original'];
+						$result['isSanit'] = $result['sanitizedValue'] === $result['originalValue'];
 						
-						if (!$result['sanit'])
+						if (!$result['isSanit'])
 						{
 							trigger_error('Variable: "' . $variableName . '" is NOT a float', E_USER_WARNING);
 							
@@ -158,7 +179,7 @@ abstract class XXX_Client_Input
 						{
 							$result['defaultValue'] = '';
 						}
-						$result['sanitized'] = $result['defaultValue'];
+						$result['sanitizedValue'] = $result['defaultValue'];
 						
 						$valueCharacterLength = XXX_String::getCharacterLength($value);
 						
@@ -167,45 +188,23 @@ abstract class XXX_Client_Input
 						
 						if ($validHashCharacters && $validCharacterLength)
 						{
-							$result['sanitized'] = $value;
-							$result['sanit'] = true;				
+							$result['sanitizedValue'] = $value;
+							$result['isSanit'] = true;				
 						}
 						
-						if (!$result['sanit'])
+						if (!$result['isSanit'])
 						{
 							trigger_error('Variable: "' . $variableName . '" is NOT a hash', E_USER_WARNING);
 							
 							XXX::dispatchEventToListeners('maliciousClientInputVariable', array('sanitation' => $sanitation, 'reason' => 'NOT a hash', 'variableName' => $variableName, 'value' => $value));
 						}
 						break;
-					case 'base64':						
-						if (XXX_Type::isNull($result['defaultValue']))
-						{
-							$result['defaultValue'] = '';
-						}
-						$result['sanitized'] = $result['defaultValue'];
-						
-						$validBase64Characters = XXX_String_Pattern::hasMatch($value, '^[a-zA-Z0-9+/]*={0,2}$', '');
-					
-						if ($validBase64Characters)
-						{
-							$result['sanitized'] = $value;
-							$result['sanit'] = true;				
-						}
-						
-						if (!$result['sanit'])
-						{
-							trigger_error('Variable: "' . $variableName . '" is NOT base64 encoded', E_USER_WARNING);
-							
-							XXX::dispatchEventToListeners('maliciousClientInputVariable', array('sanitation' => $sanitation, 'reason' => 'NOT base64 encoded', 'variableName' => $variableName, 'value' => $value));
-						}
-						break;
-					case 'json':
+					case 'rawJSON':
 						if (XXX_Type::isNull($result['defaultValue']))
 						{
 							$result['defaultValue'] = false;
 						}
-						$result['sanitized'] = $result['defaultValue'];
+						$result['sanitizedValue'] = $result['defaultValue'];
 						
 						$isEmptyOrFalse = $value == '' || XXX_Type::makeBoolean($value) == false;
 						
@@ -213,19 +212,19 @@ abstract class XXX_Client_Input
 						
 						if ($jsonDecoded)
 						{
-							$result['sanitized'] = $jsonDecoded;
-							$result['sanit'] = true;	
+							$result['sanitizedValue'] = $jsonDecoded;
+							$result['isSanit'] = true;	
 						}
 						else
 						{
 							if ($isEmptyOrFalse)
 							{
-								$result['sanitized'] = false;
-								$result['sanit'] = true;	
+								$result['sanitizedValue'] = false;
+								$result['isSanit'] = true;
 							}
 						}
 						
-						if (!$result['sanit'])
+						if (!$result['isSanit'])
 						{
 							trigger_error('Variable: "' . $variableName . '" is NOT json encoded', E_USER_WARNING);
 							
@@ -237,32 +236,38 @@ abstract class XXX_Client_Input
 						{
 							$result['defaultValue'] = '';
 						}
-						$result['sanitized'] = $result['defaultValue'];
+						$result['sanitizedValue'] = $result['defaultValue'];
 						
 						$sanitizedValue = $value;
-								
-						// Format UTF8 / Character encoding
-						if (!XXX_String_Unicode_Filter::isValid($sanitizedValue))
+						
+						if ($parameters['filterUTF8'])
 						{
-							$sanitizedValue = XXX_String_Unicode_Filter::filter($sanitizedValue);
-							
-							trigger_error('Variable: "' . $variableName . '" string is invalid UTF-8', E_USER_WARNING);
-							
-							XXX::dispatchEventToListeners('maliciousClientInputVariable', array('sanitation' => $sanitation, 'reason' => 'Invalid UTF-8', 'variableName' => $variableName, 'value' => $value));
+							// Format UTF8 / Character encoding
+							if (!XXX_String_Unicode_Filter::isValid($sanitizedValue))
+							{
+								$sanitizedValue = XXX_String_Unicode_Filter::filter($sanitizedValue);
+								
+								trigger_error('Variable: "' . $variableName . '" string is invalid UTF-8', E_USER_WARNING);
+								
+								XXX::dispatchEventToListeners('maliciousClientInputVariable', array('sanitation' => $sanitation, 'reason' => 'Invalid UTF-8', 'variableName' => $variableName, 'value' => $value));
+							}
 						}
 						
-						// Filted out unwanted control characters
-						if (!XXX_String_ControlCharacters_Filter::isValid($sanitizedValue))
-						{
-							$sanitizedValue = XXX_String_ControlCharacters_Filter::filter($sanitizedValue);
-							
-							trigger_error('Variable: "' . $variableName . '" string had control characters in it.', E_USER_WARNING);
-							
-							XXX::dispatchEventToListeners('maliciousClientInputVariable', array('sanitation' => $sanitation, 'reason' => 'Has unwanted control characters', 'variableName' => $variableName, 'value' => $value));
+						if ($parameters['filterControlCharacters'])
+						{						
+							// Filted out unwanted control characters
+							if (!XXX_String_ControlCharacters_Filter::isValid($sanitizedValue))
+							{
+								$sanitizedValue = XXX_String_ControlCharacters_Filter::filter($sanitizedValue);
+								
+								trigger_error('Variable: "' . $variableName . '" string had control characters in it.', E_USER_WARNING);
+								
+								XXX::dispatchEventToListeners('maliciousClientInputVariable', array('sanitation' => $sanitation, 'reason' => 'Has unwanted control characters', 'variableName' => $variableName, 'value' => $value));
+							}
 						}
 					
 						// Filter out unwanted HTML / JavaScript (XSS)
-						if (!$parameters['unfiltered'])
+						if ($parameters['filterHTML'])
 						{
 							$tempValue = self::$HTML_Filter->filter($sanitizedValue);
 							
@@ -277,26 +282,25 @@ abstract class XXX_Client_Input
 						}
 						
 						// Escape HTML / JavaScript output
-											
-						if (!$parameters['rawHTMLEntities'])
+						if ($parameters['encodeHTML'])
 						{
 							$sanitizedValue = XXX_String_HTMLEntities::encode($sanitizedValue);
 						}
 						
-						$result['sanitized'] = $sanitizedValue;
+						$result['sanitizedValue'] = $sanitizedValue;
 						
-						$result['sanit'] = $result['sanitized'] === $result['original'];						
+						$result['isSanit'] = $result['sanitizedValue'] === $result['original'];
 						break;
-					case 'boolean':						
+					case 'boolean':
 						if (XXX_Type::isNull($result['defaultValue']))
 						{
 							$result['defaultValue'] = false;
 						}
 						
-						$result['sanitized'] = $result['defaultValue'];
+						$result['sanitizedValue'] = $result['defaultValue'];
 						
 						$validTrue = $value === true || $value === 1 || $value === '1' || XXX_String::convertToLowerCase($value) === 'true';
-						$validFalse = $value === false || $value === 0 || $value === '0' || XXX_String::convertToLowerCase($value) === 'false';
+						$validFalse = $value === false || $value === 0 || $value === '0' || XXX_String::convertToLowerCase($value) === 'false' || $value === '';
 						
 						if ($validTrue)
 						{
@@ -308,12 +312,12 @@ abstract class XXX_Client_Input
 						}
 						if ($validTrue || $validFalse)
 						{
-							$result['sanitized'] = $value;						
+							$result['sanitizedValue'] = $value;						
 						}
 						
-						$result['sanit'] = $result['sanitized'] === $result['original'];
+						$result['isSanit'] = $result['sanitizedValue'] === $result['originalValue'];
 											
-						if (!$result['sanit'])
+						if (!$result['isSanit'])
 						{
 							trigger_error('Variable: "' . $variableName . '" is NOT boolean', E_USER_WARNING);
 							
@@ -323,15 +327,15 @@ abstract class XXX_Client_Input
 				}
 			}
 			
-			if (!$result['sanit'])
+			if (!$result['isSanit'])
 			{
 				self::$maliciousVariables[] = $result['name'];
 				
 			}
 			
-			if (!$parameters['advanced'])
+			if ($simplifyResult)
 			{
-				$result = $result['sanitized'];
+				$result = $result['sanitizedValue'];
 			}
 			
 			return $result;

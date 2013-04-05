@@ -153,7 +153,7 @@ abstract class XXX_HTTPServer_Client_Input
 		
 	// body
 	
-		public static function getBodyVariable ($inputName, $filter = 'string', $defaultValue = NULL, $parameters = array())
+		public static function getBodyVariable ($inputName, $filter = 'string', $parameters = array())
 		{
 			$value = '';
 			
@@ -162,7 +162,7 @@ abstract class XXX_HTTPServer_Client_Input
 				$value = self::$parsedBodyVariables[$inputName];
 			}
 			
-			$result = XXX_Client_Input::sanitizeVariable($inputName, $value, $filter, $defaultValue, $parameters);
+			$result = XXX_Client_Input::sanitizeVariable($inputName, $value, $filter, $parameters, true);
 			
 			return $result;	
 		}
@@ -179,7 +179,7 @@ abstract class XXX_HTTPServer_Client_Input
 		
 	// uri
 	
-		public static function getURIVariable ($inputName, $filter = 'string', $defaultValue = NULL, $parameters = array())
+		public static function getURIVariable ($inputName, $filter = 'string', $parameters = array())
 		{
 			$value = '';
 			
@@ -188,7 +188,7 @@ abstract class XXX_HTTPServer_Client_Input
 				$value = self::$parsedURIVariables[$inputName];
 			}
 			
-			$result = XXX_Client_Input::sanitizeVariable($inputName, $value, $filter, $defaultValue, $parameters);
+			$result = XXX_Client_Input::sanitizeVariable($inputName, $value, $filter, $parameters, true);
 			
 			return $result;
 		}
