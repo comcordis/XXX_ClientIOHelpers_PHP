@@ -715,7 +715,7 @@ abstract class XXX_HTTPServer_Client_Input
 							if ($valid)
 							{
 								// Sanitize the file string
-								$normalizedFile = XXX_Client_Input::sanitizeVariable($uploadedFile['inputName'], $uploadedFile['file'], 'string');
+								$normalizedFile = XXX_Client_Input::sanitizeVariable($uploadedFile['inputName'], $uploadedFile['file'], 'string', false, true);
 								
 								if ($normalizedFile != $uploadedFile['file'])
 								{
