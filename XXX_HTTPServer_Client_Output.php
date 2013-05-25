@@ -63,7 +63,7 @@ abstract class XXX_HTTPServer_Client_Output
 				
 				if ($seekStart > 0 || $seekEnd < ($byteSize - 1))
 		        {
-		            self::sendHeader('HTTP/1.1 206 Partial Content');
+		            self::sendHeader(XXX_HTTPServer_Client::$requestProtocolAndVersionPrefix . ' 206 Partial Content');
 		        }
 		
 		        self::sendHeader('Accept-Ranges: bytes');
@@ -227,12 +227,12 @@ abstract class XXX_HTTPServer_Client_Output
 	
 	public static function sendNotFoundHeader ()
 	{
-		return self::sendHeader('HTTP/1.0 404 Not Found');
+		return self::sendHeader(XXX_HTTPServer_Client::$requestProtocolAndVersionPrefix . ' 404 Not Found');
 	}
 	
 	public static function sendNotModifiedHeader ()
 	{
-		return self::sendHeader('HTTP/1.0 304 Not Modified');
+		return self::sendHeader(XXX_HTTPServer_Client::$requestProtocolAndVersionPrefix . ' 304 Not Modified');
 	}
 	
 	public static function sendCrossSubDomainAccessHeader ()
