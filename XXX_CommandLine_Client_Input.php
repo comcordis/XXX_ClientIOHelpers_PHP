@@ -9,7 +9,7 @@ class XXX_CommandLine_Client_Input
 		self::$parsedArgumentVariables = self::parseArgumentVariables();
 	}
 	
-	public static function getArgumentVariable ($inputName, $filter = 'string', $defaultValue = NULL, $parameters = array())
+	public static function getArgumentVariable ($inputName, $filter = 'string', $parameters = array())
 	{
 		$value = '';
 		
@@ -18,7 +18,7 @@ class XXX_CommandLine_Client_Input
 			$value = self::$parsedArgumentVariables[$inputName];
 		}
 		
-		$result = XXX_Client_Input::sanitizeVariable($inputName, $value, $filter, $defaultValue, $parameters);
+		$result = XXX_Client_Input::sanitizeVariable($inputName, $value, $filter, $parameters, true);
 		
 		return $result;	
 	}
