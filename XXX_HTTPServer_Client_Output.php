@@ -7,13 +7,9 @@ abstract class XXX_HTTPServer_Client_Output
 	public static $compressOutput = false;
 	
 	public static $headers = array();
-
-	public static function processDownloadHeaders ($file = '', $byteSize = 0, $mimeType = 'application/octet-stream', $fileModifiedTimestamp = 0)
+	
+	public static function prepareForFileServingOrDownload ()
 	{
-		$result = false;
-		
-		// TODO If you want to do something on download abort/finish, use register_shutdown_function('function_name');
-		
 		// Avoid any output
 		error_reporting(0);
 				
@@ -33,13 +29,19 @@ abstract class XXX_HTTPServer_Client_Output
 			{
 				ini_set('zlib.output_compression', 'Off');
 			}
-        	
-        	// encode dots in filenames with an extra dot in it... e.g. some.file.ext 
-        	$file = preg_replace('/\./', '%2e', $file, substr_count($file, '.') - 1);
-        }
+		}		
 		
 		// Turn off output buffering to decrease cpu usage
 		ob_end_clean();
+	}
+		
+	public static function processDownloadHeaders ($file = '', $byteSize = 0, $mimeType = 'application/octet-stream', $fileModifiedTimestamp = 0)
+	{
+		$result = false;
+		
+		// TODO If you want to do something on download abort/finish, use register_shutdown_function('function_name');
+		
+		self::prepareForFileServingOrDownload();
 				
 		if(XXX_HTTPServer_Client_Input::$onlyIfModifiedSinceTimestamp == $fileModifiedTimestamp)
 		{
@@ -70,6 +72,12 @@ abstract class XXX_HTTPServer_Client_Output
 		        self::sendHeader('Content-Range: bytes ' . $seekStart . '-' . $seekEnd . '/' . $byteSize);
 			}
 			
+	        if (XXX_HTTPServer_Client::$browser == 'internetExplorer')
+	        {
+	        	// encode dots in filenames with an extra dot in it... e.g. some.file.ext 
+	        	$file = preg_replace('/\./', '%2e', $file, substr_count($file, '.') - 1);
+	        }
+        
 			self::sendHeader('Content-Type: ' . $mimeType);		
 			self::sendHeader('Content-Disposition: attachment; filename="' . $file . '"');
 			self::sendHeader('Content-Transfer-Encoding: binary');
@@ -100,10 +108,10 @@ abstract class XXX_HTTPServer_Client_Output
 			{
 				if ($file == '')
 				{
-					$file = XXX_Path_Local::getIdentifierFromPath('AbsoluteLocal', $absoluteFile);
+					$file = XXX_Path_Local::getIdentifier($absoluteFile);
 				}
 				
-				$mimeType = XXX_FileSystem_Local::getFileMIMEType($absoluteFile);
+				$mimeType = self::determineAppropriateMIMEType($absoluteFile);
 				$byteSize = XXX_FileSystem_Local::getFileSize($absoluteFile);
 				$fileModifiedTimestamp = XXX_FileSystem_Local::getFileModifiedTimestamp($absoluteFile);
 				
@@ -146,6 +154,79 @@ abstract class XXX_HTTPServer_Client_Output
 			}
 			
 			return $result;
+		}
+		
+		public static function forceAbsoluteFileServing ($absoluteFile = '', $chunkSize = 8192)
+		{
+			$result = false;
+			
+			if (!XXX_FileSystem_Local::doesFileExist($absoluteFile))
+			{
+				self::sendHeader('HTTP/1.0 404 Not Found');
+			}
+			else
+			{
+				$file = XXX_Path_Local::getIdentifier($absoluteFile);
+				
+				$fileModifiedTimestamp = XXX_FileSystem_Local::getFileModifiedTimestamp($absoluteFile);
+				
+				if(XXX_HTTPServer_Client_Input::$onlyIfModifiedSinceTimestamp == $fileModifiedTimestamp)
+				{
+					self::sendNotModifiedHeader();
+				}
+				else
+				{
+					$mimeType = self::determineAppropriateMIMEType($absoluteFile);
+					$byteSize = XXX_FileSystem_Local::getFileSize($absoluteFile);
+					
+					self::prepareForFileServingOrDownload();
+					
+					self::sendHeader('Last-Modified: '. gmdate('D, d M Y H:i:s', $fileModifiedTimestamp) . ' GMT');
+					self::sendHeader('Content-Type: ' . $mimeType);
+					self::sendHeader('Content-Length: ' . $byteSize);
+					self::sendHeader('Connection: close');
+						   				
+	   				$fileStream = XXX_FileSystem_Local::fileStream_openForReading($absoluteFile, false);
+				
+					if ($fileStream)
+					{
+						while (!XXX_HTTPServer_Client::isDisconnected() && !XXX_FileSystem_Local::fileStream_hasReadReachedEnd($fileStream))
+						{
+							$result = true;
+						
+							$buffer = XXX_FileSystem_Local::fileStream_readChunk($fileStream, $chunkSize);
+							
+							if ($buffer)
+							{
+								echo $buffer;
+								flush();
+							}
+							else
+							{
+								break;
+							}
+						}
+						
+						XXX_FileSystem_Local::fileStream_close($fileStream);
+					}
+				}
+			}
+			
+			return $result;
+		}
+		
+		public static function mimicStaticFileServing ($subPath)
+		{
+			$basePath = XXX_Path_Local::extendPath(XXX_Path_Local::$deploymentDataPathPrefix, 'static');
+			
+			return self::serveFileFromBasePath($basePath, $subPath);
+		}
+		
+		public static function serveFileFromBasePath ($basePath, $subPath)
+		{
+			$tempFile = XXX_Path_Local::extendPath($basePath, $subPath);
+		
+			return self::forceAbsoluteFileServing($tempFile);
 		}
 		
 		public static function forceStringAsFileDownload ($string = '', $file = '', $mimeType = 'text/plain')
@@ -193,6 +274,47 @@ abstract class XXX_HTTPServer_Client_Output
 		}
 	
 	// TODO after successful download, be sure no blank lines are omitted which might cause problems.
+	
+	public static function determineAppropriateMIMEType ($absoluteFile)
+	{
+		$extension = XXX_String::convertToLowerCase(XXX_FileSystem_Local::getFileExtension($absoluteFile));
+					
+		switch ($extension)
+		{
+			case 'css':
+				$mimeType = 'text/css';
+				break;
+			case 'js':
+				$mimeType = 'text/javascript';
+				break;
+			case 'htm':
+			case 'html':
+				$mimeType = 'text/html';
+				break;
+			case 'txt':
+				$mimeType = 'text/plain';
+				break;
+			case 'ico':
+				$mimeType = 'image/x-icon';
+				break;
+			case 'jpg':
+			case 'jpeg':
+				$mimeType = 'image/jpg';
+				break;
+			case 'png':
+				$mimeType = 'image/png';
+				break;
+			case 'gif':
+				$mimeType = 'image/gif';
+				break;
+			default:
+				$mimeType = XXX_FileSystem_Local::getFileMIMEType($absoluteFile);
+				break;
+		}
+		
+		return $mimeType;
+	}
+	
 	
 	public static function sendNotCacheableHeaders ()
 	{
