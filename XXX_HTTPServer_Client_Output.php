@@ -184,13 +184,14 @@ abstract class XXX_HTTPServer_Client_Output
 					self::sendHeader('Last-Modified: '. gmdate('D, d M Y H:i:s', $fileModifiedTimestamp) . ' GMT');
 					self::sendHeader('Content-Type: ' . $mimeType);
 					self::sendHeader('Content-Length: ' . $byteSize);
-					self::sendHeader('Connection: close');
 					
-					if (class_exists('XXX_HTTP_Cooke_Session'))
+					if (class_exists('XXX_HTTP_Cookie_Session'))
 					{
 						XXX::dispatchEventToListeners('beforeSaveSession');
-						XXX_HTTP_Cooke_Session::save();
+						XXX_HTTP_Cookie_Session::save();
 					}
+					
+					self::sendHeader('Connection: close');					
 						   				
 	   				$fileStream = XXX_FileSystem_Local::fileStream_openForReading($absoluteFile, false);
 				
