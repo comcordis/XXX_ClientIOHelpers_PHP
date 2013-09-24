@@ -185,6 +185,11 @@ abstract class XXX_HTTPServer_Client_Output
 					self::sendHeader('Content-Type: ' . $mimeType);
 					self::sendHeader('Content-Length: ' . $byteSize);
 					self::sendHeader('Connection: close');
+					
+					if (class_exists('XXX_HTTP_Cooke_Session'))
+					{
+						XXX_HTTP_Cooke_Session::save();
+					}
 						   				
 	   				$fileStream = XXX_FileSystem_Local::fileStream_openForReading($absoluteFile, false);
 				
