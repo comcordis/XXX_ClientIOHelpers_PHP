@@ -188,6 +188,7 @@ abstract class XXX_HTTPServer_Client_Output
 					
 					if (class_exists('XXX_HTTP_Cooke_Session'))
 					{
+						XXX::dispatchEventToListeners('beforeSaveSession');
 						XXX_HTTP_Cooke_Session::save();
 					}
 						   				
