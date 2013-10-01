@@ -35,11 +35,16 @@ abstract class XXX_HTTPServer_Client_Output
 		ob_end_clean();
 	}
 		
-	public static function processDownloadHeaders ($file = '', $byteSize = 0, $mimeType = 'application/octet-stream', $fileModifiedTimestamp = 0)
+	public static function processDownloadHeaders ($file = '', $byteSize = 0, $mimeType = 'application/octet-stream', $fileModifiedTimestamp = false)
 	{
 		$result = false;
 		
 		// TODO If you want to do something on download abort/finish, use register_shutdown_function('function_name');
+		
+		if ($fileModifiedTimestamp == false)
+		{
+			$fileModifiedTimestamp = XXX_TimestampHelpers::getCurrentTimestamp() + (86400 * 365);
+		}
 		
 		self::prepareForFileServingOrDownload();
 				
