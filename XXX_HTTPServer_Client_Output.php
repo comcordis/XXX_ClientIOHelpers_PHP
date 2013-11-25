@@ -229,7 +229,7 @@ abstract class XXX_HTTPServer_Client_Output
 		
 		public static function mimicStaticFileServing ($subPath)
 		{
-			$basePath = XXX_Path_Local::extendPath(XXX_Path_Local::$deploymentDataPathPrefix, 'static');
+			$basePath = XXX_Static_Publisher::$destinationPathPrefix;
 			
 			return self::serveFileFromBasePath($basePath, $subPath);
 		}
