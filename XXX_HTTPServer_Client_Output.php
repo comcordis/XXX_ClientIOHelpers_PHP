@@ -6,9 +6,11 @@ abstract class XXX_HTTPServer_Client_Output
 {
 	public static $compressOutput = false;
 	
+	public static $compressedOutput = false;
+	
 	public static $headers = array();
 	
-	public static function prepareForFileServingOrDownload ()
+	public static function prepareForFileServingOrDownload ($leaveOutputBuffer = false)
 	{
 		// Avoid any output
 		error_reporting(0);
@@ -31,8 +33,11 @@ abstract class XXX_HTTPServer_Client_Output
 			}
 		}		
 		
-		// Turn off output buffering to decrease cpu usage
-		ob_end_clean();
+		if (!$leaveOutputBuffer)
+		{
+			// Turn off output buffering to decrease cpu usage
+			ob_end_clean();
+		}
 	}
 		
 	public static function processDownloadHeaders ($file = '', $byteSize = 0, $mimeType = 'application/octet-stream', $fileModifiedTimestamp = false)
@@ -46,7 +51,7 @@ abstract class XXX_HTTPServer_Client_Output
 			$fileModifiedTimestamp = XXX_TimestampHelpers::getCurrentTimestamp() + (86400 * 365);
 		}
 		
-		self::prepareForFileServingOrDownload();
+		self::prepareForFileServingOrDownload(self::$compressOutput);
 				
 		if(XXX_HTTPServer_Client_Input::$onlyIfModifiedSinceTimestamp == $fileModifiedTimestamp)
 		{
@@ -184,7 +189,7 @@ abstract class XXX_HTTPServer_Client_Output
 					$mimeType = self::determineAppropriateMIMEType($absoluteFile);
 					$byteSize = XXX_FileSystem_Local::getFileSize($absoluteFile);
 					
-					self::prepareForFileServingOrDownload();
+					self::prepareForFileServingOrDownload(self::$compressOutput);
 					
 					self::sendHeader('Last-Modified: '. gmdate('D, d M Y H:i:s', $fileModifiedTimestamp) . ' GMT');
 					self::sendHeader('Content-Type: ' . $mimeType);
@@ -392,6 +397,8 @@ abstract class XXX_HTTPServer_Client_Output
 			$output = self::compressOutput($output);
 		}
 		
+		//XXX_Log::logLine($output, 'bufferedOutput');
+		
 		return $output;
 	}
 	
@@ -401,63 +408,68 @@ abstract class XXX_HTTPServer_Client_Output
 		
 		$compressed = false;
 		
-		if (XXX_HTTPServer_Client::$outputEncoding['gzip'])
-		{
-			$compressionLevel = 5; // Range 0 - 9, default = 5
-			
-			$result = gzencode($output, $compressionLevel, FORCE_GZIP);
-			
-			if ($result)
+		if (function_exists('gzencode'))
+		{	
+			$compressionLevel = -1; // Range 0 - 9, default = 5
+					
+			if (XXX_HTTPServer_Client::$outputEncoding['gzip'])
 			{
-				if (XXX_PHP::$debug)
-				{
-					$originalLength = XXX_String::getByteSize($output);
-					$compressedLength = XXX_String::getByteSize($result);
-					$compressionPercentage = XXX_Number::round(($compressedLength / $originalLength) * 100);
-					$compressionRatio = XXX_Number::round(($originalLength / $compressedLength), 2);
-					
-					$output .= XXX_String::$lineSeparator;
-					$output .= '<!--' . XXX_String::$lineSeparator;
-					$output .= 'Compressed with: gzip' . XXX_String::$lineSeparator;
-					$output .= 'Original length: ' .$originalLength . XXX_String::$lineSeparator;
-					$output .= 'Compressed length: ' . $compressedLength . ' (' . $compressionPercentage . '%)' . XXX_String::$lineSeparator;
-					$output .= 'Compression ratio: 1 / ' . $compressionRatio . XXX_String::$lineSeparator;
-					$output .= 'Compression level: ' . $compressionLevel . XXX_String::$lineSeparator;
-					$output .= '-->' . XXX_String::$lineSeparator;
-					
-					$result = gzencode($output, $compressionLevel, FORCE_GZIP);
-				}
+				$result = gzencode($output, $compressionLevel, FORCE_GZIP);
 				
-				XXX_HTTPServer_Client_Output::sendHeader('Content-Encoding: gzip');				
-				$compressed = true;
+				if ($result)
+				{
+					if (XXX_PHP::$debug && 1 == 2)
+					{
+						$originalLength = XXX_String::getByteSize($output);
+						$compressedLength = XXX_String::getByteSize($result);
+						$compressionPercentage = XXX_Number::round(($compressedLength / $originalLength) * 100);
+						$compressionRatio = XXX_Number::round(($originalLength / $compressedLength), 2);
+						
+						$output .= XXX_String::$lineSeparator;
+						$output .= '<!--' . XXX_String::$lineSeparator;
+						$output .= 'Compressed with: gzip' . XXX_String::$lineSeparator;
+						$output .= 'Original length: ' .$originalLength . XXX_String::$lineSeparator;
+						$output .= 'Compressed length: ' . $compressedLength . ' (' . $compressionPercentage . '%)' . XXX_String::$lineSeparator;
+						$output .= 'Compression ratio: 1 / ' . $compressionRatio . XXX_String::$lineSeparator;
+						$output .= 'Compression level: ' . $compressionLevel . XXX_String::$lineSeparator;
+						$output .= '-->' . XXX_String::$lineSeparator;
+						
+						$result = gzencode($output, $compressionLevel, FORCE_GZIP);
+					}
+					
+					XXX_HTTPServer_Client_Output::sendHeader('Content-Encoding: gzip');				
+					XXX_HTTPServer_Client_Output::sendHeader('Vary: Accept-Encoding');				
+					$compressed = true;
+				}
 			}
-		}
-		else if (XXX_HTTPServer_Client::$outputEncoding['deflate'])
-		{
-			$result = gzencode($output, FORCE_DEFLATE);
-			
-			if ($result)
+			else if (XXX_HTTPServer_Client::$outputEncoding['deflate'])
 			{
-				if (XXX_PHP::$debug)
-				{
-					$originalLength = XXX_String::getByteSize($output);
-					$compressedLength = XXX_String::getByteSize($result);
-					$compressionPercentage = XXX_Number::round(($compressedLength / $originalLength) * 100);
-					$compressionRatio = XXX_Number::round(($originalLength / $compressedLength), 2);
-					
-					$output .= XXX_String::$lineSeparator;
-					$output .= '<!--' . XXX_String::$lineSeparator;
-					$output .= 'Compressed with: deflate' . XXX_String::$lineSeparator;
-					$output .= 'Original length:  ' .$originalLength . XXX_String::$lineSeparator;
-					$output .= 'Compressed length: ' . $compressedLength . ' (' . $compressionPercentage . '%)' . XXX_String::$lineSeparator;
-					$output .= 'Compression ratio: 1 / ' . $compressionRatio . XXX_String::$lineSeparator;
-					$output .= '-->' . XXX_String::$lineSeparator;
-					
-					$result = gzencode($output, FORCE_DEFLATE);
-				}
+				$result = gzencode($output, $compressionLevel, FORCE_DEFLATE);
 				
-				XXX_HTTPServer_Client_Output::sendHeader('Content-Encoding: deflate');
-				$compressed = true;
+				if ($result)
+				{
+					if (XXX_PHP::$debug && 1 == 2)
+					{
+						$originalLength = XXX_String::getByteSize($output);
+						$compressedLength = XXX_String::getByteSize($result);
+						$compressionPercentage = XXX_Number::round(($compressedLength / $originalLength) * 100);
+						$compressionRatio = XXX_Number::round(($originalLength / $compressedLength), 2);
+						
+						$output .= XXX_String::$lineSeparator;
+						$output .= '<!--' . XXX_String::$lineSeparator;
+						$output .= 'Compressed with: deflate' . XXX_String::$lineSeparator;
+						$output .= 'Original length:  ' .$originalLength . XXX_String::$lineSeparator;
+						$output .= 'Compressed length: ' . $compressedLength . ' (' . $compressionPercentage . '%)' . XXX_String::$lineSeparator;
+						$output .= 'Compression ratio: 1 / ' . $compressionRatio . XXX_String::$lineSeparator;
+						$output .= '-->' . XXX_String::$lineSeparator;
+						
+						$result = gzencode($output, $compressionLevel, FORCE_DEFLATE);
+					}
+					
+					XXX_HTTPServer_Client_Output::sendHeader('Content-Encoding: deflate');			
+					XXX_HTTPServer_Client_Output::sendHeader('Vary: Accept-Encoding');
+					$compressed = true;
+				}
 			}
 		}
 		
@@ -465,7 +477,7 @@ abstract class XXX_HTTPServer_Client_Output
 		{
 			$result = $output;
 			
-			if (XXX_PHP::$debug)
+			if (XXX_PHP::$debug && 1 == 2)
 			{
 				$result .= XXX_String::$lineSeparator;
 				$result .= '<!--' . XXX_String::$lineSeparator;
