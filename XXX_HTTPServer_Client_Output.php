@@ -8,6 +8,8 @@ abstract class XXX_HTTPServer_Client_Output
 	
 	public static $compressedOutput = false;
 	
+	public static $mimeType = 'application/octet-stream';
+	
 	public static $headers = array();
 	
 	public static function prepareForFileServingOrDownload ($leaveOutputBuffer = false)
@@ -87,7 +89,8 @@ abstract class XXX_HTTPServer_Client_Output
 	        	// encode dots in filenames with an extra dot in it... e.g. some.file.ext 
 	        	$file = preg_replace('/\./', '%2e', $file, substr_count($file, '.') - 1);
 	        }
-        
+        	
+        	self::$mimeType = $mimeType;
 			self::sendHeader('Content-Type: ' . $mimeType);		
 			self::sendHeader('Content-Disposition: attachment; filename="' . $file . '"');
 			self::sendHeader('Content-Transfer-Encoding: binary');
@@ -192,6 +195,7 @@ abstract class XXX_HTTPServer_Client_Output
 					self::prepareForFileServingOrDownload(self::$compressOutput);
 					
 					self::sendHeader('Last-Modified: '. gmdate('D, d M Y H:i:s', $fileModifiedTimestamp) . ' GMT');
+					self::$mimeType = $mimeType;
 					self::sendHeader('Content-Type: ' . $mimeType);
 					self::sendHeader('Content-Length: ' . $byteSize);
 					
@@ -361,6 +365,7 @@ abstract class XXX_HTTPServer_Client_Output
 	
 	public static function setOutputContentTypeAndCharacterSet ($contentType = 'text/html', $characterSet = 'utf-8')
 	{
+		self::$mimeType = $contentType;
 		self::sendHeader('Content-type: ' . $contentType . '; charset=' . $characterSet);
 	}
 	
@@ -392,9 +397,9 @@ abstract class XXX_HTTPServer_Client_Output
 	public static function bufferedOutputCallback ($output)
 	{
 		// TODO cpu load check via memcached or something if load is low
-		if (self::$compressOutput)
+		if (XXX_HTTPServer_Client_Output::$compressOutput)
 		{
-			$output = self::compressOutput($output);
+			$output = XXX_HTTPServer_Client_Output::compressOutput($output);
 		}
 		
 		//XXX_Log::logLine($output, 'bufferedOutput');
@@ -402,11 +407,53 @@ abstract class XXX_HTTPServer_Client_Output
 		return $output;
 	}
 	
+	public static function commentBasedOnFileType ($comment = '', $fileExtension = 'html')
+	{
+		if (XXX_Type::isArray($comment))
+		{
+			$comment = XXX_Array::joinValuesToString($comment, XXX_String::$lineSeparator);
+		}
+		
+		$newComment = '';
+		
+		switch (self::$mimeType)
+		{
+			case 'text/javascript':
+				$newComment .= XXX_String::$lineSeparator;
+				$newComment .= '/*' . XXX_String::$lineSeparator;
+				$newComment .= $comment . XXX_String::$lineSeparator;
+				$newComment .= '*/' . XXX_String::$lineSeparator;
+				break;
+			case 'text/css':
+				$newComment .= XXX_String::$lineSeparator;
+				$newComment .= '/*' . XXX_String::$lineSeparator;
+				$newComment .= $comment . XXX_String::$lineSeparator;
+				$newComment .= '*/' . XXX_String::$lineSeparator;
+				break;
+			case 'text/html':
+			case 'text/xml':
+				$newComment .= XXX_String::$lineSeparator;
+				$newComment .= '<!-- ' . XXX_String::$lineSeparator;
+				$newComment .= $comment . XXX_String::$lineSeparator;
+				$newComment .= ' -->' . XXX_String::$lineSeparator;
+				break;
+			case 'text/plain':
+				$newComment .= XXX_String::$lineSeparator;
+				$newComment .= XXX_String::$lineSeparator;
+				$newComment .= $comment . XXX_String::$lineSeparator;
+				break;
+		}
+		
+		return $newComment;
+	}
+	
 	public static function compressOutput ($output)
 	{		
 		$result = '';
 		
 		$compressed = false;
+		
+		$comment = array();
 		
 		if (function_exists('gzencode'))
 		{	
@@ -418,21 +465,20 @@ abstract class XXX_HTTPServer_Client_Output
 				
 				if ($result)
 				{
-					if (XXX_PHP::$debug && 1 == 2)
+					if (XXX_PHP::$debug)
 					{
 						$originalLength = XXX_String::getByteSize($output);
 						$compressedLength = XXX_String::getByteSize($result);
 						$compressionPercentage = XXX_Number::round(($compressedLength / $originalLength) * 100);
 						$compressionRatio = XXX_Number::round(($originalLength / $compressedLength), 2);
 						
-						$output .= XXX_String::$lineSeparator;
-						$output .= '<!--' . XXX_String::$lineSeparator;
-						$output .= 'Compressed with: gzip' . XXX_String::$lineSeparator;
-						$output .= 'Original length: ' .$originalLength . XXX_String::$lineSeparator;
-						$output .= 'Compressed length: ' . $compressedLength . ' (' . $compressionPercentage . '%)' . XXX_String::$lineSeparator;
-						$output .= 'Compression ratio: 1 / ' . $compressionRatio . XXX_String::$lineSeparator;
-						$output .= 'Compression level: ' . $compressionLevel . XXX_String::$lineSeparator;
-						$output .= '-->' . XXX_String::$lineSeparator;
+						$comment[] = 'Compressed with: gzip';
+						$comment[] = 'Original length: ' .$originalLength;
+						$comment[] = 'Compressed length: ' . $compressedLength . ' (' . $compressionPercentage . '%)';
+						$comment[] = 'Compression ratio: 1 / ' . $compressionRatio;
+						$comment[] = 'Compression level: ' . $compressionLevel;
+						
+						$output .= self::commentBasedOnFileType($comment);
 						
 						$result = gzencode($output, $compressionLevel, FORCE_GZIP);
 					}
@@ -448,20 +494,19 @@ abstract class XXX_HTTPServer_Client_Output
 				
 				if ($result)
 				{
-					if (XXX_PHP::$debug && 1 == 2)
+					if (XXX_PHP::$debug)
 					{
 						$originalLength = XXX_String::getByteSize($output);
 						$compressedLength = XXX_String::getByteSize($result);
 						$compressionPercentage = XXX_Number::round(($compressedLength / $originalLength) * 100);
 						$compressionRatio = XXX_Number::round(($originalLength / $compressedLength), 2);
 						
-						$output .= XXX_String::$lineSeparator;
-						$output .= '<!--' . XXX_String::$lineSeparator;
-						$output .= 'Compressed with: deflate' . XXX_String::$lineSeparator;
-						$output .= 'Original length:  ' .$originalLength . XXX_String::$lineSeparator;
-						$output .= 'Compressed length: ' . $compressedLength . ' (' . $compressionPercentage . '%)' . XXX_String::$lineSeparator;
-						$output .= 'Compression ratio: 1 / ' . $compressionRatio . XXX_String::$lineSeparator;
-						$output .= '-->' . XXX_String::$lineSeparator;
+						$comment[] = 'Compressed with: deflate';
+						$comment[] = 'Original length:  ' .$originalLength;
+						$comment[] = 'Compressed length: ' . $compressedLength . ' (' . $compressionPercentage . '%)';
+						$comment[] = 'Compression ratio: 1 / ' . $compressionRatio;
+						
+						$output .= self::commentBasedOnFileType($comment);
 						
 						$result = gzencode($output, $compressionLevel, FORCE_DEFLATE);
 					}
@@ -477,12 +522,11 @@ abstract class XXX_HTTPServer_Client_Output
 		{
 			$result = $output;
 			
-			if (XXX_PHP::$debug && 1 == 2)
+			if (XXX_PHP::$debug)
 			{
-				$result .= XXX_String::$lineSeparator;
-				$result .= '<!--' . XXX_String::$lineSeparator;
-				$result .= 'No compression applied... (Browser didn\'t state (gzip) or (deflate) compression support in the request)';
-				$result .= '-->' . XXX_String::$lineSeparator;
+				$comment[] = 'No compression applied... (Browser didn\'t state (gzip) or (deflate) compression support in the request)';
+				
+				$result .= self::commentBasedOnFileType($comment);
 			}
 		}
 		
