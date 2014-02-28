@@ -6,9 +6,7 @@ abstract class XXX_HTTPServer_Client_Output
 {
 	public static $compressOutput = false;
 	
-	public static $compressedOutput = false;
-	
-	public static $mimeType = 'application/octet-stream';
+	public static $mimeType = 'text/html';
 	
 	public static $headers = array();
 	
@@ -90,8 +88,7 @@ abstract class XXX_HTTPServer_Client_Output
 	        	$file = preg_replace('/\./', '%2e', $file, substr_count($file, '.') - 1);
 	        }
         	
-        	self::$mimeType = $mimeType;
-			self::sendHeader('Content-Type: ' . $mimeType);		
+			self::setMIMETypeAndCharacterSet($mimeType);	
 			self::sendHeader('Content-Disposition: attachment; filename="' . $file . '"');
 			self::sendHeader('Content-Transfer-Encoding: binary');
 			self::sendHeader('Content-Length: ' . $byteSize);
@@ -195,8 +192,7 @@ abstract class XXX_HTTPServer_Client_Output
 					self::prepareForFileServingOrDownload(self::$compressOutput);
 					
 					self::sendHeader('Last-Modified: '. gmdate('D, d M Y H:i:s', $fileModifiedTimestamp) . ' GMT');
-					self::$mimeType = $mimeType;
-					self::sendHeader('Content-Type: ' . $mimeType);
+					self::setMIMETypeAndCharacterSet($mimeType);
 					self::sendHeader('Content-Length: ' . $byteSize);
 					
 					if (class_exists('XXX_HTTP_Cookie_Session'))
@@ -363,10 +359,31 @@ abstract class XXX_HTTPServer_Client_Output
 		}
 	}
 	
-	public static function setOutputContentTypeAndCharacterSet ($contentType = 'text/html', $characterSet = 'utf-8')
+	public static function setMIMETypeAndCharacterSet ($mimeType = 'text/html', $characterSet = false)
 	{
-		self::$mimeType = $contentType;
-		self::sendHeader('Content-type: ' . $contentType . '; charset=' . $characterSet);
+		self::$mimeType = $mimeType;
+		
+		$suffix = '';
+		
+		switch ($mimeType)
+		{
+			case 'text/html':
+			case 'text/xml':
+			case 'text/javascript':
+			case 'text/css':
+				if ($characterSet === '')
+				{
+					$characterSet = 'utf-8';
+				}
+				break;
+		}
+		
+		if ($characterSet != '')
+		{
+			$suffix .= '; charset=' . $characterSet;
+		}
+		
+		self::sendHeader('Content-type: ' . $contentType . $suffix);
 	}
 	
 	public static function sendNotFoundHeader ()
@@ -407,7 +424,7 @@ abstract class XXX_HTTPServer_Client_Output
 		return $output;
 	}
 	
-	public static function commentBasedOnFileType ($comment = '', $fileExtension = 'html')
+	public static function commentBasedOnFileType ($comment = '')
 	{
 		if (XXX_Type::isArray($comment))
 		{
