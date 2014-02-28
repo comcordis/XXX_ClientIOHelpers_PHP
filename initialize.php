@@ -25,7 +25,7 @@ switch (XXX_PHP::$executionEnvironment)
 				XXX_HTTPServer_Client_Output::$compressOutput = function_exists('gzencode') && (XXX_HTTPServer_Client::$outputEncoding['gzip'] || XXX_HTTPServer_Client::$outputEncoding['deflate']);
 				
 				// http://www.beetlebrow.co.uk/what-do-you-need/help-and-documentation/unix-tricks-and-information/safari-gzip-deflation-and-blank-pages
-				if (strpos($_SERVER['HTTP_USER_AGENT'], 'safari') !== false)
+				if (strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'safari') !== false)
 				{
 					XXX_HTTPServer_Client_Output::$compressOutput = false;
 				}
