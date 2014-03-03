@@ -383,7 +383,7 @@ abstract class XXX_HTTPServer_Client_Output
 			$suffix .= '; charset=' . $characterSet;
 		}
 		
-		self::sendHeader('Content-type: ' . $contentType . $suffix);
+		self::sendHeader('Content-type: ' . $mimeType . $suffix);
 	}
 	
 	public static function sendNotFoundHeader ()
