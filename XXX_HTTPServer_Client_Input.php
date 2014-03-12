@@ -30,7 +30,7 @@ abstract class XXX_HTTPServer_Client_Input
 	
 	public static $failedFileUpload = false;	
 	public static $successfulFileUpload = false;
-	
+		
 	public static $parsedURIVariables = array();
 	public static $parsedBodyVariables = array();
 	

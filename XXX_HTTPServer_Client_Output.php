@@ -441,6 +441,8 @@ abstract class XXX_HTTPServer_Client_Output
 				$newComment .= $comment . XXX_String::$lineSeparator;
 				$newComment .= '*/' . XXX_String::$lineSeparator;
 				break;
+			case 'application/json':
+				break;
 			case 'text/css':
 				$newComment .= XXX_String::$lineSeparator;
 				$newComment .= '/*' . XXX_String::$lineSeparator;
