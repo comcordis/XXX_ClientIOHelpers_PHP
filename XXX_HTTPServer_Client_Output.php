@@ -122,6 +122,12 @@ abstract class XXX_HTTPServer_Client_Output
 				}
 				
 				$mimeType = self::determineAppropriateMIMEType($absoluteFile);
+				
+				$mimeTypeParts = explode('/', $mimeType);
+				if ($mimeTypeParts[0] != 'text')
+				{
+					self::$compressOutput = false;
+				}
 				$byteSize = XXX_FileSystem_Local::getFileSize($absoluteFile);
 				$fileModifiedTimestamp = XXX_FileSystem_Local::getFileModifiedTimestamp($absoluteFile);
 				
@@ -187,6 +193,12 @@ abstract class XXX_HTTPServer_Client_Output
 				else
 				{
 					$mimeType = self::determineAppropriateMIMEType($absoluteFile);
+					
+				$mimeTypeParts = explode('/', $mimeType);
+				if ($mimeTypeParts[0] != 'text')
+				{
+					self::$compressOutput = false;
+				}
 					$byteSize = XXX_FileSystem_Local::getFileSize($absoluteFile);
 					
 					self::prepareForFileServingOrDownload(self::$compressOutput);
@@ -195,10 +207,10 @@ abstract class XXX_HTTPServer_Client_Output
 					self::setMIMETypeAndCharacterSet($mimeType);
 					self::sendHeader('Content-Length: ' . $byteSize);
 					
-					if (class_exists('XXX_HTTP_Cookie_Session'))
+					if (class_exists('XXX_Session'))
 					{
 						XXX::dispatchEventToListeners('beforeSaveSession');
-						XXX_HTTP_Cookie_Session::save();
+						XXX_Session::save();
 					}
 					
 					self::sendHeader('Connection: close');					

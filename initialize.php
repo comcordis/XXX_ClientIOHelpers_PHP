@@ -23,6 +23,20 @@ switch (XXX_PHP::$executionEnvironment)
 			case 'server':
 			case 'www':
 				XXX_HTTPServer_Client_Output::$compressOutput = function_exists('gzencode') && (XXX_HTTPServer_Client::$outputEncoding['gzip'] || XXX_HTTPServer_Client::$outputEncoding['deflate']);
+				/*
+				Google Page Speed Insight
+				
+				use any other extension, just not '.gz' ('.jgz', '.foo' or any other one)
+				set the gzip-encoded header for your chosen extensions ('Content-encoding: gzip')
+				set the appropriate MIME type: text/javascript or text/css
+				
+				
+				After some digging around I learned that you cannot send compressed javascripts to Safari with the extension of “gz”. It must be “jgz”
+				
+				Mobile: Mozilla/5.0 (iPhone; CPU iPhone OS 6_0_1 like Mac OS X) AppleWebKit/537.36 (KHTML, like Gecko; Google Page Speed Insights) Version/6.0 Mobile/10A525 Safari/8536.25
+				
+				Desktop: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko; Google Page Speed Insights) Chrome/27.0.1453 Safari/537.36
+				*/
 				
 				// http://www.beetlebrow.co.uk/what-do-you-need/help-and-documentation/unix-tricks-and-information/safari-gzip-deflation-and-blank-pages
 				if (strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'safari') !== false && strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'google page speed insights') === false)
