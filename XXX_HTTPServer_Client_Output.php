@@ -11,13 +11,16 @@ abstract class XXX_HTTPServer_Client_Output
 	public static $headers = array();
 	
 	public static function forceJSONResponse ($result = '')
-	{		
+	{
+		// CORP
 		if ($_SERVER['HTTP_ORIGIN'])
 		{
 			header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
 		}
 		
-		$json = XXX_String_JSON::encode($result);		
+		$json = XXX_String_JSON::encode($result);
+		
+		// JSONP	
 		$jsonp = XXX_HTTPServer_Client_Input::getURIVariable('jsonp');
 		$callback = XXX_HTTPServer_Client_Input::getURIVariable('callback');
 		
