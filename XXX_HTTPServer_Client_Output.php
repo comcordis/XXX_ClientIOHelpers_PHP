@@ -10,6 +10,31 @@ abstract class XXX_HTTPServer_Client_Output
 	
 	public static $headers = array();
 	
+	public static function forceJSONResponse ($result = '')
+	{		
+		if ($_SERVER['HTTP_ORIGIN'])
+		{
+			header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
+		}
+		
+		$json = XXX_String_JSON::encode($result);		
+		$jsonp = XXX_HTTPServer_Client_Input::getURIVariable('jsonp');
+		$callback = XXX_HTTPServer_Client_Input::getURIVariable('callback');
+		
+		if ($jsonp != '')
+		{
+			echo $jsonp . '(' . $json . ');';
+		}
+		else if ($callback != '')
+		{
+			echo $callback . '(' . $json . ');';
+		}
+		else
+		{
+			echo $json;
+		}
+	}
+	
 	public static function prepareForFileServingOrDownload ($leaveOutputBuffer = false)
 	{
 		// Avoid any output
