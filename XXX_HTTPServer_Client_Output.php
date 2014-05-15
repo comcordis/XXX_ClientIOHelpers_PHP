@@ -11,7 +11,7 @@ abstract class XXX_HTTPServer_Client_Output
 	public static $headers = array();
 	
 	public static function forceJSONResponse ($result = '')
-	{
+	{	
 		// CORP
 		if ($_SERVER['HTTP_ORIGIN'])
 		{
@@ -26,14 +26,20 @@ abstract class XXX_HTTPServer_Client_Output
 		
 		if ($jsonp != '')
 		{
+			self::setMIMETypeAndCharacterSet('application/javascript');
+		
 			echo $jsonp . '(' . $json . ');';
 		}
 		else if ($callback != '')
 		{
+			self::setMIMETypeAndCharacterSet('application/javascript');
+			
 			echo $callback . '(' . $json . ');';
 		}
 		else
 		{
+			self::setMIMETypeAndCharacterSet('application/json');
+		
 			echo $json;
 		}
 	}
