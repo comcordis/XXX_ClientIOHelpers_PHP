@@ -16,6 +16,7 @@ abstract class XXX_HTTPServer_Client_Output
 		if ($_SERVER['HTTP_ORIGIN'])
 		{
 			header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
+			header('Access-Control-Allow-Methods: GET, POST');
 		}
 		
 		$json = XXX_String_JSON::encode($result);
@@ -65,7 +66,7 @@ abstract class XXX_HTTPServer_Client_Output
 			{
 				ini_set('zlib.output_compression', 'Off');
 			}
-		}		
+		}
 		
 		if (!$leaveOutputBuffer)
 		{
