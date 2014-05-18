@@ -10,35 +10,68 @@ abstract class XXX_HTTPServer_Client_Output
 	
 	public static $headers = array();
 	
-	public static function forceJSONResponse ($result = '')
-	{	
-		// CORS
-		if ($_SERVER['HTTP_ORIGIN'])
+	// CORS
+	
+		public static function detectPreflightCORSRequest ()
 		{
-			header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
-			header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-			header('Access-Control-Allow-Headers: ' . $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']);
+			$result = false;
+			
+			if (strtolower($_SERVER['REQUEST_METHOD']) == 'options')
+			{
+				self::outputCORSHeaders();
+				
+				header('Content-type: text/json; charset=utf-8');
+				
+				$result = true;
+				
+				XXX_PHP::$cleanExecutionExit = true;
+				
+				exit();
+			}
+			
+			return $result;
 		}
+		
+		public static function outputCORSHeaders ()
+		{
+			if ($_SERVER['HTTP_ORIGIN'])
+			{
+				header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
+				header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+				header('Access-Control-Allow-Headers: ' . $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']);
+			}
+		}
+	
+	public static function forceJSONResponse ($result = '')
+	{
+		self::outputCORSHeaders();
 		
 		$json = XXX_String_JSON::encode($result);
 		
 		// JSONP	
 		$jsonp = XXX_HTTPServer_Client_Input::getURIVariable('jsonp');
 		$callback = XXX_HTTPServer_Client_Input::getURIVariable('callback');
+		$function = XXX_HTTPServer_Client_Input::getURIVariable('function');
 		
-		// text instead application for IE
+		if ($jsonp == '')
+		{
+			if ($callback != '')
+			{
+				$jsonp = $callback;
+			}
+			else if ($function != '')
+			{
+				$jsonp = $function;
+			}
+		}
+		
+		// text instead application mimetypes for IE
 		
 		if ($jsonp != '')
 		{
 			self::setMIMETypeAndCharacterSet('text/javascript');
 		
 			echo $jsonp . '(' . $json . ');';
-		}
-		else if ($callback != '')
-		{
-			self::setMIMETypeAndCharacterSet('text/javascript');
-			
-			echo $callback . '(' . $json . ');';
 		}
 		else
 		{
