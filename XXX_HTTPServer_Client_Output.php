@@ -12,11 +12,12 @@ abstract class XXX_HTTPServer_Client_Output
 	
 	public static function forceJSONResponse ($result = '')
 	{	
-		// CORP
+		// CORS
 		if ($_SERVER['HTTP_ORIGIN'])
 		{
 			header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
-			header('Access-Control-Allow-Methods: GET, POST');
+			header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+			header('Access-Control-Allow-Headers: ' . $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']);
 		}
 		
 		$json = XXX_String_JSON::encode($result);
@@ -25,21 +26,23 @@ abstract class XXX_HTTPServer_Client_Output
 		$jsonp = XXX_HTTPServer_Client_Input::getURIVariable('jsonp');
 		$callback = XXX_HTTPServer_Client_Input::getURIVariable('callback');
 		
+		// text instead application for IE
+		
 		if ($jsonp != '')
 		{
-			self::setMIMETypeAndCharacterSet('application/javascript');
+			self::setMIMETypeAndCharacterSet('text/javascript');
 		
 			echo $jsonp . '(' . $json . ');';
 		}
 		else if ($callback != '')
 		{
-			self::setMIMETypeAndCharacterSet('application/javascript');
+			self::setMIMETypeAndCharacterSet('text/javascript');
 			
 			echo $callback . '(' . $json . ');';
 		}
 		else
 		{
-			self::setMIMETypeAndCharacterSet('application/json');
+			self::setMIMETypeAndCharacterSet('text/json');
 		
 			echo $json;
 		}
