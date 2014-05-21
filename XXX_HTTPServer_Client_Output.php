@@ -75,7 +75,8 @@ abstract class XXX_HTTPServer_Client_Output
 		}
 		else
 		{
-			self::setMIMETypeAndCharacterSet('text/json');
+			//self::setMIMETypeAndCharacterSet('text/json');
+			self::setMIMETypeAndCharacterSet('text/javascript');
 		
 			echo $json;
 		}
