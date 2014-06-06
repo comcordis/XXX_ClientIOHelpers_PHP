@@ -20,7 +20,7 @@ abstract class XXX_HTTPServer_Client_Output
 			{
 				self::outputCORSHeaders();
 				
-				header('Content-type: text/json; charset=utf-8');
+				self::sendHeader('Content-type: text/json; charset=utf-8');
 				
 				$result = true;
 				
@@ -36,9 +36,10 @@ abstract class XXX_HTTPServer_Client_Output
 		{
 			if ($_SERVER['HTTP_ORIGIN'])
 			{
-				header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
-				header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-				header('Access-Control-Allow-Headers: ' . $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']);
+				self::sendHeader('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
+				self::sendHeader('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+				self::sendHeader('Access-Control-Allow-Credentials: true');
+				self::sendHeader('Access-Control-Allow-Headers: ' . $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']);
 			}
 		}
 	
@@ -557,7 +558,7 @@ abstract class XXX_HTTPServer_Client_Output
 	
 	public static function sendHeader ($header = '')
 	{
-		return header($header);
+		return self::sendHeader($header);
 	}
 	
 	public static function flush ()
