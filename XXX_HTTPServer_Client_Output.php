@@ -66,7 +66,7 @@ abstract class XXX_HTTPServer_Client_Output
 			}
 		}
 		
-		// text instead application mimetypes for IE
+		// text instead of application mimetypes for IE
 		
 		if ($jsonp != '')
 		{
@@ -558,7 +558,7 @@ abstract class XXX_HTTPServer_Client_Output
 	
 	public static function sendHeader ($header = '')
 	{
-		return self::sendHeader($header);
+		return header($header);
 	}
 	
 	public static function flush ()

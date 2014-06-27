@@ -53,4 +53,6 @@ switch (XXX_PHP::$executionEnvironment)
 		break;
 }
 
+XXX_Path_Local::addDefaultIncludePathsForProjectSource('PHP_XXX_ClientIOHelpers');
+
 ?>
