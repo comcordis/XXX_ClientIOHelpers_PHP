@@ -24,8 +24,6 @@ abstract class XXX_HTTPServer_Client_Output
 				
 				$result = true;
 				
-				XXX_PHP::$cleanExecutionExit = true;
-				
 				exit();
 			}
 			
