@@ -168,6 +168,9 @@ class XXX_CommandLine_Client_Input
 				case 'phpon':
 					$result = XXX_String_PHPON::decode($result);
 					break;
+				case 'json':
+					$result = XXX_String_JSON::decode($result);
+					break;
 				case 'csv':
 					$result = XXX_String_CSV::parse($result);
 					break;
