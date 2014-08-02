@@ -33,6 +33,7 @@ abstract class XXX_HTTPServer_Client_Input
 		
 	public static $parsedURIVariables = array();
 	public static $parsedBodyVariables = array();
+	public static $parsedJSONVariables = array();
 	
 	public static $parsedFileUploads = array();
 	public static $parsedSplitFileUploads = array();
@@ -132,6 +133,18 @@ abstract class XXX_HTTPServer_Client_Input
 		
 		self::$parsedBodyVariables = self::parseVariables($_POST);
 		
+		$rawBodyData = self::getRawBodyData();
+		
+		if ($rawBodyData != '')
+		{
+			$rawBodyDataJSONDecoded = XXX_String_JSON::decode($rawBodyData);
+			
+			if (XXX_Type::isArray($rawBodyDataJSONDecoded))
+			{
+				self::$parsedJSONVariables = $rawBodyDataJSONDecoded;
+			}
+		}		
+		
 		self::$parsedFileUploads = self::parseFileUploads($_FILES);
 			self::$parsedSplitFileUploads = self::splitParsedFileUploadsByInputName(self::$parsedFileUploads);		
 			self::$parsedCombinedFileUploads = self::combineParsedFileUploads(self::$parsedFileUploads);	
@@ -202,7 +215,81 @@ abstract class XXX_HTTPServer_Client_Input
 		{
 			return self::$parsedURIVariables;
 		}
+		
+	// json
+		
+		public static function getJSONVariable ($inputName, $filter = 'string', $parameters = array())
+		{
+			$value = '';
 			
+			if (array_key_exists($inputName, self::$parsedJSONVariables))
+			{
+				$value = self::$parsedJSONVariables[$inputName];
+			}
+			
+			$result = XXX_Client_Input::sanitizeVariable($inputName, $value, $filter, $parameters, true);
+			
+			return $result;
+		}
+		
+		public static function setJSONVariable ($inputName, $value = '')
+		{
+			self::$parsedJSONVariables[$inputName] = $value;
+		}
+		
+		public static function getRawJSONVariables ()
+		{
+			return self::$parsedJSONVariables;
+		}
+	
+	
+	public static function getVariable ($inputName, $filter = 'string', $parameters = array(), $order = array('json', 'body', 'uri'))
+	{
+		$value = '';
+		
+		foreach ($order as $type)
+		{
+			$found = false;
+			
+			switch ($type)
+			{
+				case 'json':
+					if (array_key_exists($inputName, self::$parsedJSONVariables))
+					{
+						$value = self::$parsedJSONVariables[$inputName];
+						
+						$found = true;
+					}
+					break;
+				case 'body':
+					if (array_key_exists($inputName, self::$parsedBodyVariables))
+					{
+						$value = self::$parsedBodyVariables[$inputName];
+						
+						$found = true;
+					}
+					break;
+				case 'uri':
+					if (array_key_exists($inputName, self::$parsedURIVariables))
+					{
+						$value = self::$parsedURIVariables[$inputName];
+						
+						$found = true;
+					}
+					break;
+			}
+			
+			if ($found)
+			{
+				break;
+			}
+		}
+		
+		$result = XXX_Client_Input::sanitizeVariable($inputName, $value, $filter, $parameters, true);
+		
+		return $result;
+	}	
+	
 	/*
 	
 	http://php.net/manual/en/wrappers.php.php

@@ -17,6 +17,61 @@ abstract class XXX_Client_Input
 	
 	// variable
 		
+		public static function getVariable ($inputName, $filter = 'string', $parameters = array(), $order = array('json', 'body', 'uri', 'argument'))
+		{
+			$value = '';
+			
+			foreach ($order as $type)
+			{
+				$found = false;
+				
+				switch ($type)
+				{
+					case 'json':
+						if (array_key_exists($inputName, XXX_HTTPServer_Client_Input::$parsedJSONVariables))
+						{
+							$value = XXX_HTTPServer_Client_Input::$parsedJSONVariables[$inputName];
+							
+							$found = true;
+						}
+						break;
+					case 'body':
+						if (array_key_exists($inputName, XXX_HTTPServer_Client_Input::$parsedBodyVariables))
+						{
+							$value = XXX_HTTPServer_Client_Input::$parsedBodyVariables[$inputName];
+							
+							$found = true;
+						}
+						break;
+					case 'uri':
+						if (array_key_exists($inputName, XXX_HTTPServer_Client_Input::$parsedURIVariables))
+						{
+							$value = XXX_HTTPServer_Client_Input::$parsedURIVariables[$inputName];
+							
+							$found = true;
+						}
+						break;
+					case 'argument':
+						if (array_key_exists($inputName, XXX_CommandLine_Client_Input::$parsedArgumentVariables))
+						{
+							$value = XXX_CommandLine_Client_Input::$parsedArgumentVariables[$inputName];
+							
+							$found = true;
+						}
+						break;
+				}
+				
+				if ($found)
+				{
+					break;
+				}
+			}
+			
+			$result = self::sanitizeVariable($inputName, $value, $filter, $parameters, true);
+			
+			return $result;
+		}
+		
 		public static function hasMaliciousVariables ()
 		{
 			return XXX_Array::getFirstLevelItemTotal(self::$maliciousVariables) > 0;

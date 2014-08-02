@@ -9,28 +9,35 @@ class XXX_CommandLine_Client_Input
 		self::$parsedArgumentVariables = self::parseArgumentVariables();
 	}
 	
-	public static function getArgumentVariable ($inputName, $filter = 'string', $parameters = array())
-	{
-		$value = '';
-		
-		if (array_key_exists($inputName, self::$parsedArgumentVariables))
+	// argument
+	
+		public static function getArgumentVariable ($inputName, $filter = 'string', $parameters = array())
 		{
-			$value = self::$parsedArgumentVariables[$inputName];
+			$value = '';
+			
+			if (array_key_exists($inputName, self::$parsedArgumentVariables))
+			{
+				$value = self::$parsedArgumentVariables[$inputName];
+			}
+			
+			$result = XXX_Client_Input::sanitizeVariable($inputName, $value, $filter, $parameters, true);
+			
+			return $result;	
+		}
+	
+		public static function setArgumentVariable ($inputName, $value = '')
+		{
+			self::$parsedArgumentVariables[$inputName] = $value;
 		}
 		
-		$result = XXX_Client_Input::sanitizeVariable($inputName, $value, $filter, $parameters, true);
+		public static function getRawArgumentVariables ()
+		{
+			return self::$parsedArgumentVariables;
+		}
 		
-		return $result;	
-	}
-	
-	public static function setArgumentVariable ($inputName, $value = '')
+	public static function getVariable ($inputName, $filter = 'string', $parameters = array())
 	{
-		self::$parsedArgumentVariables[$inputName] = $value;
-	}
-	
-	public static function getRawArgumentVariables ()
-	{
-		return self::$parsedArgumentVariables;
+		return self::getArgumentVariable($inputName, $filter, $parameters);
 	}
 	
 	/*
