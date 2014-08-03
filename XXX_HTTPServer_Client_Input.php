@@ -296,9 +296,31 @@ abstract class XXX_HTTPServer_Client_Input
 	
 	*/
 	
-	public static function getRawBodyData ()
+	public static function getRawBodyData ($parser = '')
 	{
-		return file_get_contents('php://input');
+		$result = false;
+		
+		$data = file_get_contents('php://input');
+		
+		$result = $data;
+		
+		if ($parser && $result != '')
+		{
+			switch ($parser)
+			{
+				case 'phpon':
+					$result = XXX_String_PHPON::decode($result);
+					break;
+				case 'json':
+					$result = XXX_String_JSON::decode($result);
+					break;
+				case 'csv':
+					$result = XXX_String_CSV::parse($result);
+					break;
+			}
+		}
+		
+		return $result;
 	}
 	
 	public static function getRawURIData ()
