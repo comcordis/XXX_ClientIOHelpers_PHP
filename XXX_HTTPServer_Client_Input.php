@@ -327,7 +327,7 @@ abstract class XXX_HTTPServer_Client_Input
 	{
 		return $_SERVER['REQUEST_URI'];
 	}
-		
+	
 	public static function recursiveCleanValue ($key, $value)
 	{
 		if (XXX_Type::isArray($value))

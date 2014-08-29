@@ -68,14 +68,14 @@ abstract class XXX_HTTPServer_Client_Output
 		
 		if ($jsonp != '')
 		{
-			self::setMIMETypeAndCharacterSet('text/javascript');
+			self::setMIMETypeAndCharacterSet('text/plain');
 		
 			echo $jsonp . '(' . $json . ');';
 		}
 		else
 		{
 			//self::setMIMETypeAndCharacterSet('text/json');
-			self::setMIMETypeAndCharacterSet('text/javascript');
+			self::setMIMETypeAndCharacterSet('text/plain');
 		
 			echo $json;
 		}
