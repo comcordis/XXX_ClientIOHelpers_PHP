@@ -53,5 +53,6 @@ switch (XXX_PHP::$executionEnvironment)
 }
 
 XXX_Path_Local::addDefaultIncludePathsForProjectSource('PHP_XXX_ClientIOHelpers');
+XXX_I18n_Translations::loadTranslation();
 
 ?>
