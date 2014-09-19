@@ -1,7 +1,7 @@
 <?php
 
 global $XXX_I18n_Translations;
-	
+
 	$XXX_I18n_Translation['en']['flash'] = array
 	(
 		'notLoaded' => 'This part of the page uses Flash (An external browser plugin). It hasn\'t fully loaded yet! Please try again in a moment...'
