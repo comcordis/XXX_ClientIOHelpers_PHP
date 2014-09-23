@@ -1786,7 +1786,6 @@ abstract class XXX_HTTPServer_Client_Input
 				{
 					$failedFile = $fileUploadResponse['files']['failed'][$i];
 					
-					
 					$fileUploadResponse['files']['failed'][$i] = array
 					(
 						'file' => $failedFile['file'],
@@ -1802,29 +1801,6 @@ abstract class XXX_HTTPServer_Client_Input
 		}
 		
 		return $fileUploadResponse;
-	}
-	
-	public static function testFileUpload ()
-	{
-		XXX_Type::peakAtVariable(XXX_HTTPServer::$inputLimits);
-		
-		XXX_Type::peakAtVariable($_FILES);
-		XXX_Type::peakAtVariable(XXX_HTTPServer_Client_Input::getFileUploads());
-		
-		?>
-		<html>
-			<head>
-			
-			</head>
-			<body>
-				<form action="" method="POST" enctype="multipart/form-data" autocomplete="off">
-					<input type="file" name="Filedata" id="Filedata">
-					<button type="submit" name="testFileUpload" value="true">Upload</button>
-				</form>
-			</body>
-		</html>
-		<?php
-		
 	}
 }
 

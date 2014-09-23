@@ -508,54 +508,21 @@ class XXX_HTML_Filter
 	{
 		$output = $this->filter($input);
 		
-		$passed = ($output == $expectedOutput);
-		
-		$result = array
-		(
-			'type' => 'filter',
-			'input' => $input,
-			'output' => $output,
-			'expectedOutput' => $expectedOutput,
-			'passed' => $passed
-		);
-		
-		return $result;
+		XXX_Test::test('XXX_HTML_Filter', 'filter', $input, $output, $expectedOutput);
 	}
 	
 	public function caseTest ($input, $expectedOutput)
 	{
 		$output = $this->fixCase($input);
 		
-		$passed = ($output == $expectedOutput);
-		
-		$result = array
-		(
-			'type' => 'case',
-			'input' => $input,
-			'output' => $output,
-			'expectedOutput' => $expectedOutput,
-			'passed' => $passed
-		);
-		
-		return $result;
+		XXX_Test::test('XXX_HTML_Filter', 'case', $input, $output, $expectedOutput);
 	}
 	
 	public function entityTest ($input, $expectedOutput)
 	{
 		$output = $this->decodeEntities($input);
 		
-		$passed = ($output == $expectedOutput);
-		
-		$result = array
-		(
-			'type' => 'entity',
-			'input' => $input,
-			'output' => $output,
-			'expectedOutput' => $expectedOutput,
-			'passed' => $passed
-		);
-		
-		return $result;
+		XXX_Test::test('XXX_HTML_Filter', 'entity', $input, $output, $expectedOutput);
 	}
 }
 
