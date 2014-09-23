@@ -457,6 +457,9 @@ abstract class XXX_HTTPServer_Client_Output
 			case 'js':
 				$mimeType = 'text/javascript';
 				break;
+			case 'json':
+				$mimeType = 'text/json';
+				break;
 			case 'htm':
 			case 'html':
 				$mimeType = 'text/html';
@@ -589,11 +592,13 @@ abstract class XXX_HTTPServer_Client_Output
 		switch (self::$mimeType)
 		{
 			case 'text/javascript':
+			case 'application/javascript':
 				$newComment .= XXX_String::$lineSeparator;
 				$newComment .= '/*' . XXX_String::$lineSeparator;
 				$newComment .= $comment . XXX_String::$lineSeparator;
 				$newComment .= '*/' . XXX_String::$lineSeparator;
 				break;
+			case 'text/json':
 			case 'application/json':
 				break;
 			case 'text/css':
@@ -655,8 +660,8 @@ abstract class XXX_HTTPServer_Client_Output
 						$result = gzencode($output, $compressionLevel, FORCE_GZIP);
 					}
 					
-					XXX_HTTPServer_Client_Output::sendHeader('Content-Encoding: gzip');				
-					XXX_HTTPServer_Client_Output::sendHeader('Vary: Accept-Encoding');				
+					self::sendHeader('Content-Encoding: gzip');
+					self::sendHeader('Vary: Accept-Encoding');
 					$compressed = true;
 				}
 			}
@@ -683,8 +688,8 @@ abstract class XXX_HTTPServer_Client_Output
 						$result = gzencode($output, $compressionLevel, FORCE_DEFLATE);
 					}
 					
-					XXX_HTTPServer_Client_Output::sendHeader('Content-Encoding: deflate');			
-					XXX_HTTPServer_Client_Output::sendHeader('Vary: Accept-Encoding');
+					self::sendHeader('Content-Encoding: deflate');			
+					self::sendHeader('Vary: Accept-Encoding');
 					$compressed = true;
 				}
 			}
