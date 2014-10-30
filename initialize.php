@@ -2,6 +2,7 @@
 
 require_once 'XXX_Client_Input.php';
 require_once 'XXX_Client_Output.php';
+require_once 'XXX_OperatingSystem_Client_Input.php';
 require_once 'XXX_CommandLine_Client_Input.php';
 require_once 'XXX_CommandLine_Client_Output.php';
 require_once 'XXX_HTTPServer_Client_Input.php';
@@ -20,7 +21,7 @@ switch (XXX_PHP::$executionEnvironment)
 		break;
 	case 'httpServer':
 		XXX_HTTPServer_Client_Input::initialize();
-				
+		
 		switch (XXX_HTTPServer::$parsedHost['subExecutionEnvironment'])
 		{
 			case 'server':
@@ -48,6 +49,7 @@ switch (XXX_PHP::$executionEnvironment)
 				
 				// For cookies, redirects etc.
 				XXX_Client_Output::startRootBuffer();
+				
 				break;
 		}
 		

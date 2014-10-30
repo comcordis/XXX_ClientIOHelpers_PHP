@@ -20,7 +20,7 @@ abstract class XXX_HTTPServer_Client_Output
 			{
 				self::outputCORSHeaders();
 				
-				self::sendHeader('Content-type: text/json; charset=utf-8');
+				self::addHeader('Content-type', 'text/json; charset=utf-8');
 				
 				$result = true;
 				
@@ -34,10 +34,10 @@ abstract class XXX_HTTPServer_Client_Output
 		{
 			if ($_SERVER['HTTP_ORIGIN'])
 			{
-				self::sendHeader('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
-				self::sendHeader('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-				self::sendHeader('Access-Control-Allow-Credentials: true');
-				self::sendHeader('Access-Control-Allow-Headers: ' . $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']);
+				self::addHeader('Access-Control-Allow-Origin', $_SERVER['HTTP_ORIGIN']);
+				self::addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+				self::addHeader('Access-Control-Allow-Credentials', 'true');
+				self::addHeader('Access-Control-Allow-Headers', $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']);
 			}
 		}
 	
@@ -47,7 +47,7 @@ abstract class XXX_HTTPServer_Client_Output
 		
 		$json = XXX_String_JSON::encode($result);
 		
-		// JSONP	
+		// JSONP
 		$jsonp = XXX_HTTPServer_Client_Input::getURIVariable('jsonp');
 		$callback = XXX_HTTPServer_Client_Input::getURIVariable('callback');
 		$function = XXX_HTTPServer_Client_Input::getURIVariable('function');
@@ -85,24 +85,27 @@ abstract class XXX_HTTPServer_Client_Output
 	{
 		// Avoid any output
 		error_reporting(0);
-				
+		
 		ini_set('magic_quotes_runtime', 0);
 		
 		set_time_limit(0);
-			
-		if (function_exists('apache_setenv'))
-		{
-			apache_setenv('no-gzip', 1);
-		}
 		
-		if (XXX_HTTPServer_Client::$browser == 'internetExplorer')
-        {
-        	// Required for IE, otherwise Content-Disposition may be ignored
-        	if(ini_get('zlib.output_compression'))
+		// Disable Apache Gzip / output compression / output buffering
+		
+			if (function_exists('apache_setenv'))
 			{
-				ini_set('zlib.output_compression', 'Off');
+				apache_setenv('no-gzip', 1);
+				apache_setenv('dont-vary', 1);
 			}
-		}
+		
+			if (XXX_HTTPServer_Client::$browser == 'internetExplorer')
+	        {
+	        	// Required for IE, otherwise Content-Disposition may be ignored
+	        	if(ini_get('zlib.output_compression'))
+				{
+					ini_set('zlib.output_compression', 'Off');
+				}
+			}
 		
 		if (!$leaveOutputBuffer)
 		{
@@ -130,10 +133,10 @@ abstract class XXX_HTTPServer_Client_Output
 		}
 		else
 		{
-			self::sendHeader('Content-Type: application/force-download');
-			self::sendHeader('Content-Description: File Transfer');
-			self::sendHeader('Last-Modified: '. gmdate('D, d M Y H:i:s', $fileModifiedTimestamp) . ' GMT');
-	
+			self::addHeader('Content-Type', 'application/force-download');
+			self::addHeader('Content-Description', 'File Transfer');
+			self::addHeader('Last-Modified', gmdate('D, d M Y H:i:s', $fileModifiedTimestamp) . ' GMT');
+			
 			$isPartial = XXX_HTTPServer_Client_Input::$responseRange !== false;
 			
 			$seekStart = 0;
@@ -149,22 +152,25 @@ abstract class XXX_HTTPServer_Client_Output
 		            self::sendHeader(XXX_HTTPServer_Client::$requestProtocolAndVersionPrefix . ' 206 Partial Content');
 		        }
 		
-		        self::sendHeader('Accept-Ranges: bytes');
-		        self::sendHeader('Content-Range: bytes ' . $seekStart . '-' . $seekEnd . '/' . $byteSize);
+		        self::addHeader('Accept-Ranges', 'bytes');
+		        self::addHeader('Content-Range', 'bytes ' . $seekStart . '-' . $seekEnd . '/' . $byteSize);
 			}
 			
 	        if (XXX_HTTPServer_Client::$browser == 'internetExplorer')
 	        {
 	        	// encode dots in filenames with an extra dot in it... e.g. some.file.ext 
 	        	$fileIdentifier = preg_replace('/\./', '%2e', $fileIdentifier, substr_count($fileIdentifier, '.') - 1);
+	        	
+	        	self::addHeader('Pragma: public');
+				self::addHeader('Cache-Control: must-revalidate, post-check=0, pre-check=0');
 	        }
         	
 			self::setMIMETypeAndCharacterSet($mimeType);	
-			self::sendHeader('Content-Disposition: attachment; filename="' . $fileIdentifier . '"');
-			self::sendHeader('Content-Transfer-Encoding: binary');
-			self::sendHeader('Content-Length: ' . $byteSize);
+			self::addHeader('Content-Disposition', 'attachment; filename="' . $fileIdentifier . '"');
+			self::addHeader('Content-Transfer-Encoding', 'binary');
+			self::addHeader('Content-Length', $byteSize);
 			
-			self::sendHeader('Connection: close');
+			self::addHeader('Connection', 'close');
 			
 			// Cache invalidation
 			self::sendNotCacheableHeaders();
@@ -197,10 +203,10 @@ abstract class XXX_HTTPServer_Client_Output
 		}
 		else
 		{
-			self::sendHeader('Last-Modified: '. gmdate('D, d M Y H:i:s', $fileModifiedTimestamp) . ' GMT');
-			self::sendHeader('Expires: '. gmdate('D, d M Y H:i:s', time() + (86400 * 365)) . ' GMT');
+			self::addHeader('Last-Modified', gmdate('D, d M Y H:i:s', $fileModifiedTimestamp) . ' GMT');
+			self::addHeader('Expires', gmdate('D, d M Y H:i:s', time() + (86400 * 365)) . ' GMT');
 			self::setMIMETypeAndCharacterSet($mimeType);
-			self::sendHeader('Content-Length: ' . $byteSize);
+			self::addHeader('Content-Length', $byteSize);
 			
 			if (class_exists('XXX_Session'))
 			{
@@ -208,7 +214,7 @@ abstract class XXX_HTTPServer_Client_Output
 				XXX_Session::save();
 			}
 			
-			self::sendHeader('Connection: close');
+			self::addHeader('Connection', 'close');
 			
 			$result = true;
 		}
@@ -296,15 +302,26 @@ abstract class XXX_HTTPServer_Client_Output
 								
 				$mimeType = self::determineAppropriateMIMEType($file);
 				
+				
+				self::addHeader('X-Vince', 'Hello');
+				//self::$compressOutput = false;
+				
+				$byteSize = XXX_FileSystem_Local::getFileSize($file);
+				
 				$mimeTypeParts = explode('/', $mimeType);
+				
 				if ($mimeTypeParts[0] != 'text')
 				{
 					self::$compressOutput = false;
 				}
-				$byteSize = XXX_FileSystem_Local::getFileSize($file);
+				
+		XXX_Log::logLine('A1' . (XXX_HTTPServer_Client_Output::areHeadersSent() ? 'Headers already sent' : 'Headers not sent yet'), 'headers');
+		XXX_Log::saveBuffers();
 				
 				$temp = self::processServeHeaders($byteSize, $mimeType, $fileModifiedTimestamp);
 				
+		XXX_Log::logLine('A2' . (XXX_HTTPServer_Client_Output::areHeadersSent() ? 'Headers already sent' : 'Headers not sent yet'), 'headers');
+		XXX_Log::saveBuffers();
 				if ($temp)
 				{							   				
 	   				$fileStream = XXX_FileSystem_Local::fileStream_openForReading($file, false);
@@ -331,6 +348,10 @@ abstract class XXX_HTTPServer_Client_Output
 						XXX_FileSystem_Local::fileStream_close($fileStream);
 					}
 				}
+				
+				
+		XXX_Log::logLine('A3' . (XXX_HTTPServer_Client_Output::areHeadersSent() ? 'Headers already sent' : 'Headers not sent yet'), 'headers');
+		XXX_Log::saveBuffers();
 			}
 			
 			return $result;
@@ -491,9 +512,9 @@ abstract class XXX_HTTPServer_Client_Output
 	
 	public static function sendNotCacheableHeaders ()
 	{
-		self::sendHeader('Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
-		self::sendHeader('Pragma: no-cache');
-		self::sendHeader('Expires: Thu, 19 Nov 1981 08:52:00 GMT');
+		self::addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
+		self::addHeader('Pragma', 'no-cache');
+		self::addHeader('Expires', 'Thu, 19 Nov 1981 08:52:00 GMT');
 	}
 	
 	public static function areHeadersSent ()
@@ -502,16 +523,44 @@ abstract class XXX_HTTPServer_Client_Output
 	}
 	
 	
-	public static function addHeader ($header)
+	public static function addHeader ($key = '', $value = '', $overwrite = true)
 	{
-		self::$headers[] = $header;
+		$key = strtolower($key);
+		/*
+		for ($i = 0, $iEnd = count(self::$headers); $i < $iEnd; ++$i)
+		{
+			if (self::$headers[$i]['key'] == $key)
+			{
+				self::$headers[$i] = false;
+			}
+		}
+		*/
+		self::$headers[] = array
+		(
+			'key' => $key,
+			'value' => $value
+		);
+		
+		//XXX_Type::peakAtVariable(self::$headers);
+		
+		self::sendHeader($key . ': ' . $value);
 	}
 	
 	public static function flushHeaders ()
 	{
 		foreach (self::$headers as $header)
 		{
-			self::sendHeader($header);
+			if ($header !== false)
+			{
+				$headerString = $header['key'];
+				
+				if ($header['value'] != '')
+				{
+					$headerString .= ': ' . $header['value'];
+				}
+				
+				self::sendHeader($headerString);
+			}
 		}
 	}
 	
@@ -526,7 +575,9 @@ abstract class XXX_HTTPServer_Client_Output
 			case 'text/html':
 			case 'text/xml':
 			case 'text/javascript':
+			case 'text/json':
 			case 'text/css':
+			case 'text/plain':
 				if ($characterSet === '')
 				{
 					$characterSet = 'utf-8';
@@ -539,7 +590,7 @@ abstract class XXX_HTTPServer_Client_Output
 			$suffix .= '; charset=' . $characterSet;
 		}
 		
-		self::sendHeader('Content-type: ' . $mimeType . $suffix);
+		self::addHeader('Content-type', $mimeType . $suffix);
 	}
 	
 	public static function sendNotFoundHeader ()
@@ -554,7 +605,7 @@ abstract class XXX_HTTPServer_Client_Output
 	
 	public static function sendCrossSubDomainAccessHeader ()
 	{
-		return self::sendHeader('x-frame-options: SAMEORIGIN');
+		return self::addHeader('x-frame-options', 'SAMEORIGIN');
 	}
 	
 	public static function sendHeader ($header = '')
@@ -577,6 +628,9 @@ abstract class XXX_HTTPServer_Client_Output
 		
 		//XXX_Log::logLine($output, 'bufferedOutput');
 		
+		XXX_Log::logLine('C' . (XXX_HTTPServer_Client_Output::areHeadersSent() ? 'Headers already sent' : 'Headers not sent yet'), 'headers');
+		XXX_Log::saveBuffers();
+				
 		return $output;
 	}
 	
@@ -632,6 +686,10 @@ abstract class XXX_HTTPServer_Client_Output
 		
 		$comment = array();
 		
+		XXX_Log::logLine('B' . (XXX_HTTPServer_Client_Output::areHeadersSent() ? 'Headers already sent' : 'Headers not sent yet'), 'headers');
+		XXX_Log::saveBuffers();
+		
+		
 		if (function_exists('gzencode'))
 		{	
 			$compressionLevel = -1; // Range 0 - 9, default = 5
@@ -660,8 +718,8 @@ abstract class XXX_HTTPServer_Client_Output
 						$result = gzencode($output, $compressionLevel, FORCE_GZIP);
 					}
 					
-					self::sendHeader('Content-Encoding: gzip');
-					self::sendHeader('Vary: Accept-Encoding');
+					self::addHeader('Content-Encoding', 'gzip');
+					self::addHeader('Vary', 'Accept-Encoding');
 					$compressed = true;
 				}
 			}
@@ -688,8 +746,8 @@ abstract class XXX_HTTPServer_Client_Output
 						$result = gzencode($output, $compressionLevel, FORCE_DEFLATE);
 					}
 					
-					self::sendHeader('Content-Encoding: deflate');			
-					self::sendHeader('Vary: Accept-Encoding');
+					self::addHeader('Content-Encoding', 'deflate');
+					self::addHeader('Vary', 'Accept-Encoding');
 					$compressed = true;
 				}
 			}

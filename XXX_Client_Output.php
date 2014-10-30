@@ -80,16 +80,6 @@ abstract class XXX_Client_Output
 		
 		return $result;
 	}
-	
-	public static function enable ($compressed = false)
-	{
-		self::startBuffer($compressed);
-	}
-	
-	public static function disable ()
-	{
-		self::cleanAllBuffers();
-	}
 }
 
 ?>
