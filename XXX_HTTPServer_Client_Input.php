@@ -127,6 +127,8 @@ abstract class XXX_HTTPServer_Client_Input
 			trigger_error('Not within request body limits.', E_USER_ERROR);
 			
 			XXX::dispatchEventToListeners('notWithinRequestBodyLimits', array());
+			
+			XXX_Log::logLine('Not within request body limits.', 'security');
 		}
 		
 		self::$parsedURIVariables = self::parseVariables($_GET);
@@ -1253,6 +1255,8 @@ abstract class XXX_HTTPServer_Client_Input
 					$uploadedFile = $uploadedFiles[$i];
 					
 					XXX::dispatchEventToListeners('uploadedFile', $uploadedFile);
+					
+					XXX_Log::logLine('Uploaded file: ' . XXX_String_JSON::encode($uploadedFile), 'security');
 				}
 			
 				for ($i = 0, $iEnd = XXX_Array::getFirstLevelItemTotal($failedFiles); $i < $iEnd; ++$i)
@@ -1261,7 +1265,9 @@ abstract class XXX_HTTPServer_Client_Input
 					
 					if ($failedFile['error']['code'] != 4)
 					{
-						XXX::dispatchEventToListeners('failedFile', $failedFile);
+						XXX::dispatchEventToListeners('failedFileUpload', $failedFile);
+						
+						XXX_Log::logLine('Failed file upload: ' . XXX_String_JSON::encode($failedFile), 'security');
 					}				
 				}
 			

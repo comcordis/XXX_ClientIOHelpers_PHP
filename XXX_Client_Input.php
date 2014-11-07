@@ -177,9 +177,11 @@ abstract class XXX_Client_Input
 						
 						if (!$result['isSanit'])
 						{
-							trigger_error('Variable: "' . $variableName . '" is NOT an integer', E_USER_WARNING);
+							trigger_error('Variable: "' . $variableName . '" with value "' . $value . '" is NOT an integer', E_USER_WARNING);
 							
 							XXX::dispatchEventToListeners('maliciousClientInputVariable', array('sanitation' => $sanitation, 'reason' => 'NOT an integer', 'variableName' => $variableName, 'value' => $value));
+							
+							XXX_Log::logLine('Variable: "' . $variableName . '" with value "' . $value . '" is NOT an integer', 'security');
 						}
 						break;
 					case 'positiveInteger':
@@ -201,9 +203,11 @@ abstract class XXX_Client_Input
 						
 						if (!$result['isSanit'])
 						{
-							trigger_error('Variable: "' . $variableName . '" is NOT a positive integer', E_USER_WARNING);
+							trigger_error('Variable: "' . $variableName . '" with value "' . $value . '" is NOT a positive integer', E_USER_WARNING);
 							
 							XXX::dispatchEventToListeners('maliciousClientInputVariable', array('sanitation' => $sanitation, 'reason' => 'NOT a positive integer', 'variableName' => $variableName, 'value' => $value));
+							
+							XXX_Log::logLine('Variable: "' . $variableName . '" with value "' . $value . '" is NOT a positive integer', 'security');
 						}
 						break;
 					case 'float':
@@ -224,9 +228,11 @@ abstract class XXX_Client_Input
 						
 						if (!$result['isSanit'])
 						{
-							trigger_error('Variable: "' . $variableName . '" is NOT a float', E_USER_WARNING);
+							trigger_error('Variable: "' . $variableName . '" with value "' . $value . '" is NOT a float', E_USER_WARNING);
 							
 							XXX::dispatchEventToListeners('maliciousClientInputVariable', array('sanitation' => $sanitation, 'reason' => 'NOT a float', 'variableName' => $variableName, 'value' => $value));
+							
+							XXX_Log::logLine('Variable: "' . $variableName . '" with value "' . $value . '" is NOT a float', 'security');
 						}
 						break;
 					case 'hash':
@@ -249,9 +255,11 @@ abstract class XXX_Client_Input
 						
 						if (!$result['isSanit'])
 						{
-							trigger_error('Variable: "' . $variableName . '" is NOT a hash', E_USER_WARNING);
+							trigger_error('Variable: "' . $variableName . '" with value "' . $value . '" is NOT a hash', E_USER_WARNING);
 							
 							XXX::dispatchEventToListeners('maliciousClientInputVariable', array('sanitation' => $sanitation, 'reason' => 'NOT a hash', 'variableName' => $variableName, 'value' => $value));
+							
+							XXX_Log::logLine('Variable: "' . $variableName . '" with value "' . $value . '" is NOT a hash', 'security');
 						}
 						break;
 					case 'rawJSON':
@@ -281,9 +289,11 @@ abstract class XXX_Client_Input
 						
 						if (!$result['isSanit'])
 						{
-							trigger_error('Variable: "' . $variableName . '" is NOT json encoded', E_USER_WARNING);
+							trigger_error('Variable: "' . $variableName . '" with value "' . $value . '" is NOT json encoded', E_USER_WARNING);
 							
 							XXX::dispatchEventToListeners('maliciousClientInputVariable', array('sanitation' => $sanitation, 'reason' => 'NOT json encoded', 'variableName' => $variableName, 'value' => $value));
+							
+							XXX_Log::logLine('Variable: "' . $variableName . '" with value "' . $value . '" is NOT json encoded', 'security');
 						}
 						break;
 					case 'string':
@@ -302,9 +312,11 @@ abstract class XXX_Client_Input
 							{
 								$sanitizedValue = XXX_String_Unicode_Filter::filter($sanitizedValue);
 								
-								trigger_error('Variable: "' . $variableName . '" string is invalid UTF-8', E_USER_WARNING);
+								trigger_error('Variable: "' . $variableName . '" with value "' . $value . '" is invalid UTF-8 string', E_USER_WARNING);
 								
-								XXX::dispatchEventToListeners('maliciousClientInputVariable', array('sanitation' => $sanitation, 'reason' => 'Invalid UTF-8', 'variableName' => $variableName, 'value' => $value));
+								XXX::dispatchEventToListeners('maliciousClientInputVariable', array('sanitation' => $sanitation, 'reason' => 'Invalid UTF-8 string', 'variableName' => $variableName, 'value' => $value));
+								
+								XXX_Log::logLine('Variable: "' . $variableName . '" with value "' . $value . '" is invalid UTF-8 string', 'security');
 							}
 						}
 						
@@ -315,9 +327,11 @@ abstract class XXX_Client_Input
 							{
 								$sanitizedValue = XXX_String_ControlCharacters_Filter::filter($sanitizedValue);
 								
-								trigger_error('Variable: "' . $variableName . '" string had control characters in it.', E_USER_WARNING);
+								trigger_error('Variable: "' . $variableName . '" with value "' . $value . '" has unwanted control characters', E_USER_WARNING);
 								
 								XXX::dispatchEventToListeners('maliciousClientInputVariable', array('sanitation' => $sanitation, 'reason' => 'Has unwanted control characters', 'variableName' => $variableName, 'value' => $value));
+								
+								XXX_Log::logLine('Variable: "' . $variableName . '" with value "' . $value . '" has unwanted control characters', 'security');
 							}
 						}
 					
@@ -330,9 +344,11 @@ abstract class XXX_Client_Input
 							{
 								$sanitizedValue = $tempValue;
 								
-								trigger_error('Variable: "' . $variableName . '" string had unwanted HTML / JavaScript in it.', E_USER_WARNING);
+								trigger_error('Variable: "' . $variableName . '" with value "' . $value . '" has unwanted HTML / JavaScript', E_USER_WARNING);
 								
 								XXX::dispatchEventToListeners('maliciousClientInputVariable', array('sanitation' => $sanitation, 'reason' => 'Has unwanted HTML / JavaScript', 'variableName' => $variableName, 'value' => $value));
+								
+								XXX_Log::logLine('Variable: "' . $variableName . '" with value "' . $value . '" has unwanted HTML / JavaScript', 'security');
 							}
 						}
 						
@@ -374,9 +390,11 @@ abstract class XXX_Client_Input
 											
 						if (!$result['isSanit'])
 						{
-							trigger_error('Variable: "' . $variableName . '" is NOT boolean', E_USER_WARNING);
+							trigger_error('Variable: "' . $variableName . '" with value "' . $value . '" is NOT boolean', E_USER_WARNING);
 							
 							XXX::dispatchEventToListeners('maliciousClientInputVariable', array('sanitation' => $sanitation, 'reason' => 'NOT boolean', 'variableName' => $variableName, 'value' => $value));
+							
+							XXX_Log::logLine('Variable: "' . $variableName . '" with value "' . $value . '" is NOT boolean', 'security');
 						}
 						break;
 				}

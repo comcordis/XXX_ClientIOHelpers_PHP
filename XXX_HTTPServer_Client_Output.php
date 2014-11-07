@@ -315,13 +315,8 @@ abstract class XXX_HTTPServer_Client_Output
 					self::$compressOutput = false;
 				}
 				
-		XXX_Log::logLine('A1' . (XXX_HTTPServer_Client_Output::areHeadersSent() ? 'Headers already sent' : 'Headers not sent yet'), 'headers');
-		XXX_Log::saveBuffers();
-				
 				$temp = self::processServeHeaders($byteSize, $mimeType, $fileModifiedTimestamp);
 				
-		XXX_Log::logLine('A2' . (XXX_HTTPServer_Client_Output::areHeadersSent() ? 'Headers already sent' : 'Headers not sent yet'), 'headers');
-		XXX_Log::saveBuffers();
 				if ($temp)
 				{							   				
 	   				$fileStream = XXX_FileSystem_Local::fileStream_openForReading($file, false);
@@ -348,10 +343,6 @@ abstract class XXX_HTTPServer_Client_Output
 						XXX_FileSystem_Local::fileStream_close($fileStream);
 					}
 				}
-				
-				
-		XXX_Log::logLine('A3' . (XXX_HTTPServer_Client_Output::areHeadersSent() ? 'Headers already sent' : 'Headers not sent yet'), 'headers');
-		XXX_Log::saveBuffers();
 			}
 			
 			return $result;
@@ -627,9 +618,6 @@ abstract class XXX_HTTPServer_Client_Output
 		}
 		
 		//XXX_Log::logLine($output, 'bufferedOutput');
-		
-		XXX_Log::logLine('C' . (XXX_HTTPServer_Client_Output::areHeadersSent() ? 'Headers already sent' : 'Headers not sent yet'), 'headers');
-		XXX_Log::saveBuffers();
 				
 		return $output;
 	}
@@ -685,10 +673,6 @@ abstract class XXX_HTTPServer_Client_Output
 		$compressed = false;
 		
 		$comment = array();
-		
-		XXX_Log::logLine('B' . (XXX_HTTPServer_Client_Output::areHeadersSent() ? 'Headers already sent' : 'Headers not sent yet'), 'headers');
-		XXX_Log::saveBuffers();
-		
 		
 		if (function_exists('gzencode'))
 		{	
