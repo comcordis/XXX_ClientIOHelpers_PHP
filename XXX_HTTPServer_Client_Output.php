@@ -24,7 +24,7 @@ abstract class XXX_HTTPServer_Client_Output
 				
 				$result = true;
 				
-				exit();
+				XXX::canExit();
 			}
 			
 			return $result;
