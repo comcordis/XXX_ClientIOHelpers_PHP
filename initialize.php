@@ -26,8 +26,7 @@ switch (XXX_PHP::$executionEnvironment)
 		{
 			case 'server':
 			case 'www':
-				// TODO
-				//XXX_HTTPServer_Client_Output::$compressOutput = function_exists('gzencode') && (XXX_HTTPServer_Client::$outputEncoding['gzip'] || XXX_HTTPServer_Client::$outputEncoding['deflate']);
+				XXX_HTTPServer_Client_Output::$compressOutput = function_exists('gzencode') && (XXX_HTTPServer_Client::$outputEncoding['gzip'] || XXX_HTTPServer_Client::$outputEncoding['deflate']);
 				/*
 				Google Page Speed Insight
 				
