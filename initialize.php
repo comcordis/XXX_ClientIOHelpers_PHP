@@ -9,7 +9,7 @@ require_once 'XXX_HTTPServer_Client_Input.php';
 require_once 'XXX_HTTPServer_Client_Output.php';
 require_once 'XXX_HTML_Filter.php';
 
-XXX_Path_Local::addDefaultIncludePathsForProjectSource('PHP_XXX_ClientIOHelpers');
+XXX_Path_Local::addDefaultIncludePathsForProjectSource('XXX_ClientIOHelpers_PHP');
 XXX_I18n_Translation::loadTranslation();
 
 XXX_Client_Input::initialize();
