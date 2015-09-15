@@ -32,7 +32,7 @@ abstract class XXX_HTTPServer_Client_Output
 		
 		public static function outputCORSHeaders ()
 		{
-			if ($_SERVER['HTTP_ORIGIN'])
+			if ($_SERVER['HTTP_ORIGIN'] && 2 == 1)
 			{
 				self::addHeader('Access-Control-Allow-Origin', $_SERVER['HTTP_ORIGIN']);
 				self::addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
