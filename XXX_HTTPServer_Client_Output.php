@@ -32,16 +32,19 @@ abstract class XXX_HTTPServer_Client_Output
 		
 		public static function outputCORSHeaders ()
 		{
-			if ($_SERVER['HTTP_ORIGIN'])
+			if (1 == 2)
 			{
-				self::addHeader('Access-Control-Allow-Origin', $_SERVER['HTTP_ORIGIN']);
-			}
+				if ($_SERVER['HTTP_ORIGIN'])
+				{
+					self::addHeader('Access-Control-Allow-Origin', $_SERVER['HTTP_ORIGIN']);
+				}
 
-			self::addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-			self::addHeader('Access-Control-Allow-Credentials', 'true');
-			if ($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'])
-			{
-				self::addHeader('Access-Control-Allow-Headers', $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']);
+				self::addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+				self::addHeader('Access-Control-Allow-Credentials', 'true');
+				if ($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'])
+				{
+					self::addHeader('Access-Control-Allow-Headers', $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']);
+				}
 			}
 		}
 	
