@@ -32,8 +32,6 @@ abstract class XXX_HTTPServer_Client_Output
 		
 		public static function outputCORSHeaders ()
 		{
-			if (1 == 2)
-			{
 				if ($_SERVER['HTTP_ORIGIN'])
 				{
 					self::addHeader('Access-Control-Allow-Origin', $_SERVER['HTTP_ORIGIN']);
@@ -45,7 +43,6 @@ abstract class XXX_HTTPServer_Client_Output
 				{
 					self::addHeader('Access-Control-Allow-Headers', $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']);
 				}
-			}
 		}
 	
 	public static function forceJSONResponse ($result = '')
