@@ -32,19 +32,15 @@ abstract class XXX_HTTPServer_Client_Output
 		
 		public static function outputCORSHeaders ()
 		{
-			/*
 			if ($_SERVER['HTTP_ORIGIN'])
 			{
-				self::addHeader('access-control-allow-origin', $_SERVER['HTTP_ORIGIN']);
-			}
+				self::addHeader('Access-Control-Allow-Origin', $_SERVER['HTTP_ORIGIN']);
 
-			self::addHeader('access-control-allow-methods', 'GET, POST, OPTIONS');
-			self::addHeader('access-control-allow-credentials', 'true');
-			if ($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'])
-			{
-				self::addHeader('access-control-allow-headers', $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']);
+				self::addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE, PUT');
+				self::addHeader('Access-Control-Allow-Credentials', 'true');
+
+				self::addHeader('Access-Control-Allow-Headers', $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']);
 			}
-			*/
 		}
 	
 	public static function forceJSONResponse ($result = '')
